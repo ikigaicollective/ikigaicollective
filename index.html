@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ikigai Collective</title>
     <meta name="description" content="AI-powered life design through experimentation. A flat collective for people leveraging AI tools to discover and pursue their ikigai.">
+    <link rel="icon" type="image/jpeg" href="ikigaicollective-logo.jpg">
+    <meta property="og:title" content="Ikigai Collective">
+    <meta property="og:description" content="AI-powered life design through experimentation">
+    <meta property="og:image" content="https://ikigaicollective.org/ikigaicollective-logo.jpg">
+    <meta property="og:url" content="https://ikigaicollective.org">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
     <style>
         :root {
             --bg: #0a0a0a;
@@ -127,6 +134,16 @@
             color: var(--muted);
             font-size: 0.85rem;
         }
+        .logo-wrap {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .logo {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
         @media (max-width: 600px) {
             .container { padding: 2rem 1.2rem; }
             h1 { font-size: 1.8rem; }
@@ -136,6 +153,9 @@
 </head>
 <body>
     <div class="container">
+        <div class="logo-wrap">
+            <img src="ikigaicollective-logo.jpg" alt="Ikigai Collective" class="logo">
+        </div>
         <h1>Ikigai Collective</h1>
         <p class="tagline">AI-powered life design through experimentation</p>
 
