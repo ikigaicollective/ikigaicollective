@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ikigai Collective</title>
+    <meta name="description" content="AI-powered life design through experimentation. A flat collective for people leveraging AI tools to discover and pursue their ikigai.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --fg: #e8e6e3;
+            --accent: #c4956a;
+            --muted: #6b6560;
+            --card-bg: #141210;
+            --border: #2a2622;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 400;
+            letter-spacing: 0.02em;
+            margin-bottom: 0.5rem;
+        }
+        .tagline {
+            color: var(--accent);
+            font-size: 1.1rem;
+            font-style: italic;
+            margin-bottom: 3rem;
+        }
+        .section {
+            margin-bottom: 3rem;
+        }
+        h2 {
+            font-size: 1.1rem;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--muted);
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+        p {
+            margin-bottom: 1.2rem;
+            color: var(--fg);
+        }
+        .principles {
+            list-style: none;
+            padding: 0;
+        }
+        .principles li {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .principles li:last-child {
+            border-bottom: none;
+        }
+        .principles strong {
+            color: var(--accent);
+        }
+        .quote {
+            border-left: 2px solid var(--accent);
+            padding-left: 1.5rem;
+            margin: 2rem 0;
+            font-style: italic;
+            color: var(--muted);
+            font-size: 1.15rem;
+        }
+        .experiment-steps {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        .step {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 1.2rem;
+            border-radius: 4px;
+        }
+        .step-num {
+            color: var(--accent);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.3rem;
+        }
+        .step-title {
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+        .step-desc {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+        .links {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+        a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+        a:hover {
+            border-bottom-color: var(--accent);
+        }
+        .footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 2rem 1.2rem; }
+            h1 { font-size: 1.8rem; }
+            .experiment-steps { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ikigai Collective</h1>
+        <p class="tagline">AI-powered life design through experimentation</p>
+
+        <div class="section">
+            <p>The Ikigai Collective is a platform for people who want to leverage AI tools to iteratively discover and pursue their ikigai &mdash; the intersection of what you're good at, what you love, what the world needs, and what you can be paid for.</p>
+            <p>We operate like an artist studio. Members share techniques, inspire each other, and run experiments &mdash; but nobody assigns tasks. The organization is flat, participation is voluntary, and every member defines their own path.</p>
+        </div>
+
+        <div class="section">
+            <h2>Why Now</h2>
+            <p>Technology has reduced the distance from idea to action to zero. What once required years of specialized knowledge can now be prototyped in hours with agentic AI platforms. The entire SaaS industry was predicated on maintaining that distance. That era is ending.</p>
+            <p>At the same time, millions of people are caught in systems that don't serve them. AI doesn't just automate tasks &mdash; it can be a platform for life design.</p>
+        </div>
+
+        <div class="section">
+            <h2>The Experiment Model</h2>
+            <div class="experiment-steps">
+                <div class="step">
+                    <div class="step-num">01</div>
+                    <div class="step-title">Design</div>
+                    <div class="step-desc">A hypothesis about what might work for you</div>
+                </div>
+                <div class="step">
+                    <div class="step-num">02</div>
+                    <div class="step-title">Implement</div>
+                    <div class="step-desc">Using AI tools that compress months into days</div>
+                </div>
+                <div class="step">
+                    <div class="step-num">03</div>
+                    <div class="step-title">Measure</div>
+                    <div class="step-desc">The outcomes, honestly</div>
+                </div>
+                <div class="step">
+                    <div class="step-num">04</div>
+                    <div class="step-title">Iterate</div>
+                    <div class="step-desc">Same direction, different, or completely new</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Principles</h2>
+            <ul class="principles">
+                <li><strong>Everything is code.</strong> Marketing, sales, product management. AI has made this undeniable. The tools extend to every domain.</li>
+                <li><strong>Flat by design.</strong> No hierarchy, no assigned tasks. Come with your own ideas, experiments, and initiative.</li>
+                <li><strong>Open by default.</strong> Projects, profiles, and lab notes live publicly. Sharing is part of the value.</li>
+                <li><strong>Skepticism is healthy.</strong> AI is powerful and exploitable. Human connection is the check. The wetware is still necessary.</li>
+                <li><strong>Degrees of freedom.</strong> Increase cognitive, physical, and economic freedom &mdash; while being true to your values.</li>
+            </ul>
+        </div>
+
+        <div class="quote">
+            Technology reduces the distance from idea to action, and that distance is now zero.
+        </div>
+
+        <div class="section">
+            <h2>Connect</h2>
+            <p>The Collective grows through invitation. If someone you know is a member, ask them.</p>
+            <div class="links">
+                <a href="https://github.com/ikigaicollective">GitHub</a>
+                <a href="https://discord.gg/ikigaicollective">Discord</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2026 Ikigai Collective. Content is <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Code is MIT.</p>
+        </div>
+    </div>
+</body>
+</html>
