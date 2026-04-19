@@ -1,0 +1,406 @@
+# ikigai-collective — provisioning spec
+#
+# This is the machine-readable source-of-truth for the provisioner.
+# It is generated from roles.md, channels.md, onboarding-and-rules.md, and
+# the user-locked decisions captured in PROVISIONING-PLAN.md.
+#
+# Hand-edit freely. Re-run `node scripts/provision.mjs --guild ikigai-collective --plan`
+# after changes to see the diff before applying.
+#
+# Notes on decisions baked in:
+#   - MVP scope (trimmed channel tree from launch-checklist.md §3).
+#   - Accent color reserved: Ai-indigo #2A3F5F (not assigned to any role).
+#   - Rules gate: Option B — Discord's built-in Onboarding (no third-party bot).
+#   - Auto-role on join: Member (not Guest). Guest is kept for invited speakers.
+#   - Domain role colors: desaturated earth palette, sibling to the Loop palette.
+#   - Forum channels get curated tag sets (workflow tags for The Loop, domain tags for Lab Notes).
+
+# ---------------------------------------------------------------------------
+# Guild-level settings
+# ---------------------------------------------------------------------------
+guild_settings:
+  verification_level: MEDIUM              # verified email + 5-minute account age
+  explicit_content_filter: ALL_MEMBERS     # scan messages from all members
+  default_message_notifications: ONLY_MENTIONS
+  mfa_level: ELEVATED                      # 2FA required for moderation
+  system_channel: announcements
+  features_to_enable:
+    - COMMUNITY                            # unlocks Stage, Announcement, Onboarding, Welcome Screen
+  # auto-role on join — promotes bypassing the pre-verification Guest state
+  auto_role_on_join: Member
+
+# ---------------------------------------------------------------------------
+# Roles (hierarchy top → bottom)
+# ---------------------------------------------------------------------------
+# The bot's own role must sit above every role below before provisioning runs.
+
+roles:
+  # Standard — Ink (#1A1A1A)
+  - { name: Founder,         color: "#1A1A1A", permissions: [ADMINISTRATOR],                                                                                                                                                   hoist: true,  mentionable: false }
+  - { name: Admin,           color: "#1A1A1A", permissions: [MANAGE_GUILD, MANAGE_ROLES, MANAGE_CHANNELS, BAN_MEMBERS, MANAGE_MESSAGES, KICK_MEMBERS, MODERATE_MEMBERS, VIEW_AUDIT_LOG, MANAGE_WEBHOOKS, MANAGE_EMOJIS_AND_STICKERS], hoist: true,  mentionable: false }
+  - { name: Moderator,       color: "#1A1A1A", permissions: [KICK_MEMBERS, MODERATE_MEMBERS, MANAGE_MESSAGES, MANAGE_THREADS, VIEW_AUDIT_LOG],                                                                                  hoist: true,  mentionable: true  }
+  - { name: Bot,             color: null,      permissions: [],                                                                                                                                                                hoist: false, mentionable: false }
+
+  # Functional — Stone (#8C8A84)
+  - { name: Studio Host,     color: "#8C8A84", permissions: [MANAGE_THREADS, MANAGE_MESSAGES], hoist: false, mentionable: true }
+  - { name: Event Facilitator, color: "#8C8A84", permissions: [], hoist: false, mentionable: true }
+  - { name: Mentor,          color: "#8C8A84", permissions: [], hoist: false, mentionable: false }
+  - { name: Onboarding Buddy,color: "#8C8A84", permissions: [], hoist: false, mentionable: true }
+
+  # Member / Guest
+  - { name: Member, color: null, permissions: [VIEW_CHANNEL, SEND_MESSAGES, CREATE_PUBLIC_THREADS, SEND_MESSAGES_IN_THREADS, EMBED_LINKS, ATTACH_FILES, ADD_REACTIONS, USE_EXTERNAL_EMOJIS, READ_MESSAGE_HISTORY, CONNECT, SPEAK, STREAM, USE_APPLICATION_COMMANDS], hoist: false, mentionable: true }
+  - { name: Guest,  color: null, permissions: [READ_MESSAGE_HISTORY, ADD_REACTIONS],                                                                                                                                                    hoist: false, mentionable: false }
+
+  # Stage-in-loop — Loop palette
+  - { name: Designing,    color: "#C8A27A", mentionable: true }  # Clay
+  - { name: Implementing, color: "#7A8F5C", mentionable: true }  # Moss
+  - { name: Measuring,    color: "#6B7A88", mentionable: true }  # Slate
+  - { name: Iterating,    color: "#B5754F", mentionable: true }  # Terracotta
+
+  # Domain interests — desaturated earth palette (generated, hand-tunable)
+  - { name: Art & Design,            color: "#C7A676", mentionable: true }  # Ochre
+  - { name: Code & Engineering,      color: "#5C6670", mentionable: true }  # Graphite
+  - { name: Writing & Publishing,    color: "#C9B89A", mentionable: true }  # Parchment
+  - { name: Music & Audio,           color: "#8A6A4A", mentionable: true }  # Walnut
+  - { name: Film & Video,            color: "#6E6E6E", mentionable: true }  # Smoke
+  - { name: Science & Research,      color: "#A87350", mentionable: true }  # Copper
+  - { name: Education & Pedagogy,    color: "#BFAE8C", mentionable: true }  # Oat
+  - { name: Entrepreneurship,        color: "#A66246", mentionable: true }  # Rust
+  - { name: Wellness & Embodiment,   color: "#94A388", mentionable: true }  # Sage
+  - { name: Contemplative Practice,  color: "#8E9AA8", mentionable: true }  # Mist
+  - { name: Games & Play,            color: "#B5614D", mentionable: true }  # Brick
+  - { name: Hardware & Robotics,     color: "#595C60", mentionable: true }  # Iron
+
+  # Tool stacks — utility, no color
+  - { name: Claude,              color: null, mentionable: false }
+  - { name: GPT,                 color: null, mentionable: false }
+  - { name: Gemini,              color: null, mentionable: false }
+  - { name: Open-source Models,  color: null, mentionable: false }
+  - { name: Claude Code,         color: null, mentionable: false }
+  - { name: Cursor,              color: null, mentionable: false }
+  - { name: Replit Agent,        color: null, mentionable: false }
+  - { name: n8n,                 color: null, mentionable: false }
+  - { name: Zapier,              color: null, mentionable: false }
+  - { name: Notion,              color: null, mentionable: false }
+  - { name: Obsidian,            color: null, mentionable: false }
+  - { name: Figma,               color: null, mentionable: false }
+
+  # Time zones
+  - { name: Americas, color: null, mentionable: true }
+  - { name: EMEA,     color: null, mentionable: true }
+  - { name: APAC,     color: null, mentionable: true }
+
+  # Notification pings
+  - { name: Announcements,  color: null, mentionable: true }
+  - { name: Lab Night,      color: null, mentionable: true }
+  - { name: Co-work,        color: null, mentionable: true }
+  - { name: Opportunities,  color: null, mentionable: true }
+
+# Accent color held in reserve (not assigned to any role in the baseline scheme).
+accent_color_reserved: "#2A3F5F"  # Ai-indigo
+
+# ---------------------------------------------------------------------------
+# Categories + channels — MVP scope
+# Full tree lives in channels.md; expand post-launch.
+# ---------------------------------------------------------------------------
+categories:
+
+  - name: 🏛️ Welcome & Orientation
+    channels:
+      - name: read-me-first
+        type: text
+        topic: "Mission, guidelines, and how this server is structured. Onboarding unlocks the rest."
+        permission_overwrites:
+          - { role: "@everyone", deny: [SEND_MESSAGES], allow: [VIEW_CHANNEL, READ_MESSAGE_HISTORY, ADD_REACTIONS] }
+      - name: server-guide
+        type: text
+        topic: "Living map — where do I post what? Updated as the space evolves."
+        permission_overwrites:
+          - { role: "@everyone", deny: [SEND_MESSAGES] }
+      - name: introductions
+        type: text
+        topic: "New arrivals share who they are, what they're working on, what they're curious about."
+      - name: role-picker
+        type: text
+        topic: "Pick your domains, tools, time zone, and notification preferences."
+        permission_overwrites:
+          - { role: "@everyone", deny: [SEND_MESSAGES] }
+
+  - name: 📣 Signal
+    channels:
+      - name: announcements
+        type: announcement
+        topic: "Server-wide news. Pings @Announcements."
+        permission_overwrites:
+          - { role: "@everyone", deny: [SEND_MESSAGES] }
+          - { role: Admin,       allow: [SEND_MESSAGES] }
+          - { role: Moderator,   allow: [SEND_MESSAGES] }
+          - { role: Founder,     allow: [SEND_MESSAGES] }
+      - name: community-ops
+        type: text
+        topic: "Meta — structural suggestions, channel proposals, feedback on the server itself."
+
+  - name: 🧭 The Loop
+    channels:
+      - name: design
+        type: forum
+        topic: "\"What if…?\" Hypotheses, sketches, framings, things you're considering trying."
+        default_reaction_emoji: "💭"
+        available_tags:
+          - { name: open }
+          - { name: in-progress }
+          - { name: needs-input }
+          - { name: archived, moderated: true }
+      - name: implement
+        type: forum
+        topic: "\"Here's what I'm building.\" Work-in-progress, screenshots, demos, commits."
+        default_reaction_emoji: "🔨"
+        available_tags:
+          - { name: open }
+          - { name: in-progress }
+          - { name: blocked }
+          - { name: shipped }
+          - { name: archived, moderated: true }
+      - name: measure
+        type: forum
+        topic: "\"Here's what happened.\" Metrics, user quotes, test results, honest assessments."
+        default_reaction_emoji: "📊"
+        available_tags:
+          - { name: open }
+          - { name: preliminary }
+          - { name: final }
+          - { name: archived, moderated: true }
+      - name: iterate
+        type: forum
+        topic: "\"Here's what I'm changing.\" Pivots, re-hypothesizing, course corrections."
+        default_reaction_emoji: "🔁"
+        available_tags:
+          - { name: open }
+          - { name: resolved }
+          - { name: archived, moderated: true }
+
+  - name: 📓 Lab Notes
+    channels:
+      - name: lab-notes
+        type: forum
+        topic: "Longer-form reflection and output. See pinned post for the lab-note template."
+        default_reaction_emoji: "📓"
+        available_tags:
+          - { name: art-design }
+          - { name: code-engineering }
+          - { name: writing-publishing }
+          - { name: music-audio }
+          - { name: film-video }
+          - { name: science-research }
+          - { name: education }
+          - { name: entrepreneurship }
+          - { name: wellness }
+          - { name: contemplative }
+          - { name: games-play }
+          - { name: hardware-robotics }
+      - name: showcase
+        type: text
+        topic: "Finished-ish output. Launches, published pieces, releases."
+      - name: seeking-feedback
+        type: text
+        topic: "Explicit critique requests only. Posting here opts you in to direct response."
+
+  - name: 🤝 Collaboration
+    channels:
+      - name: pair-with-me
+        type: text
+        topic: "Looking for a co-builder, collaborator, or thought partner?"
+      - name: help-desk
+        type: text
+        topic: "Stuck on something? Ask early."
+      - name: tool-swap
+        type: text
+        topic: "AI tool recommendations, prompt patterns, stack reviews."
+
+  - name: 🎙️ Live
+    channels:
+      - name: Open Studio
+        type: voice
+        # topic dropped — Discord's channel topic filter rejects otherwise-benign voice-channel topics
+      - name: Lab Night
+        type: stage
+        topic: "Weekly share-out. Members present what they built, measured, or iterated."
+        permission_overwrites:
+          - { role: Event Facilitator, allow: [REQUEST_TO_SPEAK, MUTE_MEMBERS, MOVE_MEMBERS] }
+
+  - name: 🧠 Domains
+    # MVP: 4 domains sampled for an AI-native studio. Add more as regular use emerges.
+    channels:
+      - name: art-design
+        type: forum
+        available_tags: [{ name: open }, { name: in-progress }, { name: showcase }, { name: archived, moderated: true }]
+      - name: code-engineering
+        type: forum
+        available_tags: [{ name: open }, { name: in-progress }, { name: showcase }, { name: archived, moderated: true }]
+      - name: writing-publishing
+        type: forum
+        available_tags: [{ name: open }, { name: in-progress }, { name: showcase }, { name: archived, moderated: true }]
+      - name: contemplative
+        type: forum
+        available_tags: [{ name: open }, { name: in-progress }, { name: showcase }, { name: archived, moderated: true }]
+
+  - name: 💬 Lounge
+    channels:
+      - name: water-cooler
+        type: text
+        topic: "General chat. Off-topic welcome — keeps the working channels on-topic."
+
+  - name: 🔒 Admin
+    private: true  # hidden from @Member and @everyone via overwrites
+    visible_to: [Founder, Admin, Moderator, Bot]
+    channels:
+      - name: admin-chat
+        type: text
+        topic: "Admin discussion."
+      - name: mod-chat
+        type: text
+        topic: "Moderation coordination, reports triage."
+      - name: audit-log
+        type: text
+        topic: "Webhook feed: joins, leaves, bans, role changes."
+      - name: bot-commands
+        type: text
+        topic: "Bot invocations — keeps member channels clean."
+
+# ---------------------------------------------------------------------------
+# Welcome Screen (Community feature, programmatic)
+# PATCH /guilds/{id}/welcome-screen
+# ---------------------------------------------------------------------------
+welcome_screen:
+  enabled: true
+  description: "An invitation-only, AI-powered studio. Start in #read-me-first."
+  welcome_channels:
+    - { channel: read-me-first, description: "Start here — rules and how this place works.", emoji: "🏛️" }
+    - { channel: introductions, description: "Say hi. Tell us what you're working on.",       emoji: "👋" }
+    - { channel: role-picker,   description: "Pick your domains, tools, and time zone.",       emoji: "🎨" }
+
+# ---------------------------------------------------------------------------
+# Onboarding — Option B (Discord built-in)
+# PUT /guilds/{id}/onboarding
+# ---------------------------------------------------------------------------
+onboarding:
+  enabled: true
+  mode: ONBOARDING_DEFAULT
+  default_channels: [read-me-first, server-guide, introductions, role-picker]
+  prompts:
+    - title: "What brings you here?"
+      type: MULTIPLE_CHOICE
+      single_select: false
+      required: true
+      in_onboarding: true
+      options:
+        - { title: "Art & Design",            roles: [Art & Design],            emoji: "🎨" }
+        - { title: "Code & Engineering",      roles: [Code & Engineering],      emoji: "💻" }
+        - { title: "Writing & Publishing",    roles: [Writing & Publishing],    emoji: "✍️" }
+        - { title: "Music & Audio",           roles: [Music & Audio],           emoji: "🎵" }
+        - { title: "Film & Video",            roles: [Film & Video],            emoji: "🎬" }
+        - { title: "Science & Research",      roles: [Science & Research],      emoji: "🔬" }
+        - { title: "Education & Pedagogy",    roles: [Education & Pedagogy],    emoji: "📚" }
+        - { title: "Entrepreneurship",        roles: [Entrepreneurship],        emoji: "🚀" }
+        - { title: "Wellness & Embodiment",   roles: [Wellness & Embodiment],   emoji: "🌱" }
+        - { title: "Contemplative Practice",  roles: [Contemplative Practice],  emoji: "🧘" }
+        - { title: "Games & Play",            roles: [Games & Play],            emoji: "🎮" }
+        - { title: "Hardware & Robotics",     roles: [Hardware & Robotics],     emoji: "🤖" }
+
+    - title: "Where do you work from?"
+      type: MULTIPLE_CHOICE
+      single_select: true
+      required: true
+      in_onboarding: true
+      options:
+        - { title: "Americas",                             roles: [Americas], emoji: "🌎" }
+        - { title: "EMEA (Europe / Middle East / Africa)", roles: [EMEA],     emoji: "🌍" }
+        - { title: "APAC (Asia-Pacific)",                  roles: [APAC],     emoji: "🌏" }
+
+    - title: "Where are you in your experiment loop today?"
+      type: MULTIPLE_CHOICE
+      single_select: false
+      required: false
+      in_onboarding: true
+      options:
+        - { title: "Designing — forming a hypothesis", roles: [Designing],    emoji: "💭" }
+        - { title: "Implementing — building / shipping", roles: [Implementing], emoji: "🔨" }
+        - { title: "Measuring — evaluating outcomes",  roles: [Measuring],    emoji: "📊" }
+        - { title: "Iterating — adjusting course",     roles: [Iterating],    emoji: "🔁" }
+
+    - title: "Which tools do you use? (optional)"
+      type: MULTIPLE_CHOICE
+      single_select: false
+      required: false
+      in_onboarding: false
+      options:
+        - { title: Claude,              roles: [Claude] }
+        - { title: GPT,                 roles: [GPT] }
+        - { title: Gemini,              roles: [Gemini] }
+        - { title: Open-source Models,  roles: [Open-source Models] }
+        - { title: Claude Code,         roles: [Claude Code] }
+        - { title: Cursor,              roles: [Cursor] }
+        - { title: Replit Agent,        roles: [Replit Agent] }
+        - { title: n8n,                 roles: [n8n] }
+        - { title: Zapier,              roles: [Zapier] }
+        - { title: Notion,              roles: [Notion] }
+        - { title: Obsidian,            roles: [Obsidian] }
+        - { title: Figma,               roles: [Figma] }
+
+    - title: "Opt into pings? (optional)"
+      type: MULTIPLE_CHOICE
+      single_select: false
+      required: false
+      in_onboarding: false
+      options:
+        - { title: "Announcements — server-wide news",   roles: [Announcements] }
+        - { title: "Lab Night — weekly share-out",        roles: [Lab Night] }
+        - { title: "Co-work — open voice sprints",        roles: [Co-work] }
+        - { title: "Opportunities — curated gigs/grants", roles: [Opportunities] }
+
+# ---------------------------------------------------------------------------
+# Content to post after structural provisioning (Phase 4)
+# Handled by scripts/post-content.mjs
+# ---------------------------------------------------------------------------
+content:
+  - channel: read-me-first
+    from_template: ./templates/rules-channel.md
+    pin: true
+    save_message_id_to: exports/rules-message-id.txt
+  - channel: introductions
+    from_template: ./templates/welcome-message.md
+    pin: true
+  - channel: server-guide
+    from_template: ./templates/server-guide-map.md
+    pin: true
+  - channel: server-guide
+    from_template: ./templates/server-guide-howto.md
+    pin: true
+  - channel: lab-notes
+    from_template: ./templates/lab-note.md
+    as: forum_default_post_template
+
+# ---------------------------------------------------------------------------
+# Scheduled events (Phase 4)
+# Handled by scripts/schedule-events.mjs
+# Discord's API supports single-instance events; recurrence_hint drives how
+# many upcoming instances to seed. Long-term recurrence should migrate to
+# Sesh/Apollo once installed.
+# ---------------------------------------------------------------------------
+scheduled_events:
+  - name: Lab Night
+    description: "Members present what they built, measured, or iterated this week. 3–5 minutes each, open floor for questions."
+    channel: Lab Night
+    recurrence_hint: weekly
+    seed_instances: 4              # create the next 4 weekly instances
+    privacy: GUILD_ONLY
+    entity_type: STAGE_INSTANCE
+
+# ---------------------------------------------------------------------------
+# Delete list — intentionally empty.
+# To remove anything via the provisioner, add its name here AND pass --allow-delete.
+# ---------------------------------------------------------------------------
+delete:
+  roles: []
+  channels: []
+  categories: []
