@@ -10,4 +10,4 @@ Why now? Technology has reduced the distance from idea to action to zero, while 
 
 We operate like a studio: everyone pursues their own projects, shows work in progress, gets honest feedback, and joins forces only when both sides want to. We are volunteer-run and free. Adopting the three values is the only membership requirement there is.
 
-Come to a Lab Night, Thursdays at 21:00 CET on [our Discord](https://discord.gg/4rM6FqjVDE). Bring a project, or just your curiosity. The founding story, told by David Orban, is on [his blog](https://davidorban.com/2026/07/announcing-the-ikigai-collective/); these Lab Notes are the community's own record, and they continue weekly.
+Come to a Lab Night, Thursdays at 21:00 Rome time (CEST) on [our Discord](https://discord.gg/4rM6FqjVDE). Bring a project, or just your curiosity. The founding story, told by David Orban, is on [his blog](https://davidorban.com/2026/07/announcing-the-ikigai-collective/); these Lab Notes are the community's own record, and they continue weekly.
