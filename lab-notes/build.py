@@ -36,6 +36,7 @@ a:hover { border-bottom-color:var(--accent); }
 .postlist .d { color:var(--muted); font-size:0.9rem; margin-right:0.8rem; }
 .footer { margin-top:4rem; padding-top:2rem; border-top:1px solid var(--border); color:var(--muted); font-size:0.85rem; }
 .tagline { color:var(--accent); font-style:italic; margin-bottom:2.5rem; }
+.hero { width:100%; height:auto; border-radius:4px; margin-bottom:2.5rem; display:block; }
 """
 
 PAGE = """<!DOCTYPE html>
@@ -48,7 +49,7 @@ PAGE = """<!DOCTYPE html>
 <link rel="icon" type="image/jpeg" href="/ikigaicollective-logo.jpg">
 <meta property="og:title" content="{title} — Ikigai Collective Lab Notes">
 <meta property="og:description" content="{desc}">
-<meta property="og:image" content="https://ikigaicollective.org/cover.jpg">
+<meta property="og:image" content="https://ikigaicollective.org/lab-notes/img/{slug}.jpg">
 <meta property="og:type" content="article">
 <meta name="twitter:card" content="summary_large_image">
 <style>{style}</style>
@@ -58,6 +59,7 @@ PAGE = """<!DOCTYPE html>
 <a class="crumb" href="/lab-notes/">← Lab Notes · Ikigai Collective</a>
 <h1>{title}</h1>
 <p class="meta"><span class="week">Week {week}</span> · {pretty_date}</p>
+<img class="hero" src="/lab-notes/img/{slug}.jpg" alt="{title} — Lab Notes cover">
 <article>
 {body}
 </article>
@@ -140,6 +142,7 @@ def main() -> None:
         html = PAGE.format(
             title=m["title"], desc=first_sentence(m["body_md"]), style=STYLE,
             week=m["week"], pretty_date=pretty(m["date"]), body=md_to_html(m["body_md"]),
+            slug=m["slug"],
         )
         (ROOT / f"{m['slug']}.html").write_text(html, encoding="utf-8")
         print("built", m["slug"] + ".html")
