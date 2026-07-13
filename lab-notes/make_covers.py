@@ -42,6 +42,10 @@ def parse_meta(path: Path) -> dict:
     return meta
 
 
+# Weeks where the seeded flip would land the Venn cluster on the text (left) side.
+NO_FLIP = {13}
+
+
 def background(week: int) -> Image.Image:
     """Week-seeded crop + tone of the master: same family, distinct feel."""
     m = Image.open(SRC / "master-16x9.png").convert("RGB")
@@ -49,7 +53,7 @@ def background(week: int) -> Image.Image:
     x_off = (week * 37) % max(1, mw - W)
     y_off = (week * 23) % max(1, mh - H)
     im = m.crop((x_off, y_off, x_off + W, y_off + H))
-    if week % 2:
+    if week % 2 and week not in NO_FLIP:
         im = im.transpose(Image.FLIP_LEFT_RIGHT)
     im = ImageEnhance.Brightness(im).enhance(0.94 + (week % 5) * 0.03)
     im = ImageEnhance.Color(im).enhance(0.92 + (week % 4) * 0.05)
