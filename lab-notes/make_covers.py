@@ -43,7 +43,7 @@ def parse_meta(path: Path) -> dict:
 
 
 # Weeks where the seeded flip would land the Venn cluster on the text (left) side.
-NO_FLIP = {13}
+NO_FLIP = {13, 15}
 
 
 def background(week: int) -> Image.Image:
