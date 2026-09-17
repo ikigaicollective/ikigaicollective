@@ -7,8 +7,12 @@ master (src/master-16x9.png). Each week gets a slightly different crop and
 tone of the master, seeded by the week number, so the series reads as a
 family without being identical. No personal bylines — collective assets.
 
+Requires Pillow and macOS (the Georgia paths below are hardcoded):
+    python3 -m pip install --user Pillow
+
 Usage: python3 lab-notes/make_covers.py   (run from anywhere; paths are
-relative to this file). Re-runnable; overwrites lab-notes/img/<slug>.jpg.
+relative to this file). Re-runnable; overwrites lab-notes/img/<slug>.jpg
+for every post, not only the newest.
 """
 from __future__ import annotations
 

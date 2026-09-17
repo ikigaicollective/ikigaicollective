@@ -18,3 +18,4 @@ yarn-error.log*
 
 # Superseded source assets kept locally; prior versions live in git history
 lab-notes/src/_archive/
+lab-notes/__pycache__/
