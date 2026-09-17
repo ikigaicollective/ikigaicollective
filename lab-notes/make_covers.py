@@ -17,11 +17,13 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageEnhance, ImageFont
 
+from mark import mark_image
+
 ROOT = Path(__file__).resolve().parent
 SRC = ROOT / "src"
 OUT = ROOT / "img"
 
-FG, ACCENT, MUTED = "#e8e6e3", "#c4956a", "#8a837c"
+FG, ACCENT, MUTED = "#e8e6e3", "#c4956a", "#8a8078"
 GEORGIA = "/System/Library/Fonts/Supplemental/Georgia.ttf"
 GEORGIA_I = "/System/Library/Fonts/Supplemental/Georgia Italic.ttf"
 W, H = 1200, 675
@@ -42,19 +44,16 @@ def parse_meta(path: Path) -> dict:
     return meta
 
 
-# Weeks where the seeded flip would land the Venn cluster on the text (left) side.
-NO_FLIP = {13, 15, 17, 19, 21}
-
-
 def background(week: int) -> Image.Image:
     """Week-seeded crop + tone of the master: same family, distinct feel."""
     m = Image.open(SRC / "master-16x9.png").convert("RGB")
-    mw, mh = m.size  # 1376x768
-    x_off = (week * 37) % max(1, mw - W)
-    y_off = (week * 23) % max(1, mh - H)
-    im = m.crop((x_off, y_off, x_off + W, y_off + H))
-    if week % 2 and week not in NO_FLIP:
-        im = im.transpose(Image.FLIP_LEFT_RIGHT)
+    mw, mh = m.size
+    if (mw, mh) == (W, H):
+        im = m
+    else:
+        x_off = (week * 37) % max(1, mw - W)
+        y_off = (week * 23) % max(1, mh - H)
+        im = m.crop((x_off, y_off, x_off + W, y_off + H))
     im = ImageEnhance.Brightness(im).enhance(0.94 + (week % 5) * 0.03)
     im = ImageEnhance.Color(im).enhance(0.92 + (week % 4) * 0.05)
     return im
@@ -88,6 +87,12 @@ def cover(meta: dict) -> None:
     week = int(meta["week"])
     im = background(week)
     d = ImageDraw.Draw(im)
+    # brand lockup, top left: the mark with the wordmark beside it
+    mark_px, wordmark_px = 44, 22
+    m = mark_image(mark_px, ACCENT)
+    im.paste(m, (TEXT_X, 42), m)
+    d.text((TEXT_X + mark_px + 16, 42 + (mark_px - wordmark_px) // 2 - 1),
+           " ".join("IKIGAI COLLECTIVE"), font=font(GEORGIA, wordmark_px), fill=MUTED)
     kicker = "LAB NOTES"
     kf = font(GEORGIA, 20)
     tf = title_font(d, meta["title"])

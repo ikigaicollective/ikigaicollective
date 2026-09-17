@@ -15,3 +15,6 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+
+# Superseded source assets kept locally; prior versions live in git history
+lab-notes/src/_archive/
