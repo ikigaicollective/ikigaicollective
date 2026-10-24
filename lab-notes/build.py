@@ -65,7 +65,7 @@ PAGE = """<!DOCTYPE html>
 </article>
 <div class="footer">
 <p>The open lab notebook of the <a href="/">Ikigai Collective</a> — Curiosity · Agency · Compassion.
-Lab Night is every Thursday at 21:00 Rome time (CEST) on <a href="https://discord.gg/4rM6FqjVDE">our Discord</a>.
+Lab Night is every Thursday at 21:00 Rome time on <a href="https://discord.gg/4rM6FqjVDE">our Discord</a>.
 Content is <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.</p>
 </div>
 </div>
@@ -97,7 +97,7 @@ INDEX = """<!DOCTYPE html>
 {items}
 </ul>
 <div class="footer">
-<p>New notes appear after each Lab Night (Thursdays 21:00 Rome time (CEST), <a href="https://discord.gg/4rM6FqjVDE">Discord</a>).
+<p>New notes appear after each Lab Night (Thursdays 21:00 Rome time, <a href="https://discord.gg/4rM6FqjVDE">Discord</a>).
 Content is <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.</p>
 </div>
 </div>
