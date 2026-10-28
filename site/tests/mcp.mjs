@@ -66,6 +66,14 @@ t = await call('show_page', { page: '/lab-notes/first-draft-values-v2' });
 assert.ok(t.startsWith('Not found') && t.includes('first-draft-of-our-values'), 'suggests near matches');
 t = await call('show_page', { page: 'https://evil.test/../../etc/passwd' });
 assert.ok(t.startsWith('Not found'));
+for (const p of ['https://example.com', 'http://evil.com/lab-notes/tsundoku', 'https://ikigaicollective.org.evil.com/', 'https://ikigaicollective.org@evil.com/', 'https://x@ikigaicollective.org/', '//evil.com', '//evil.com/lab-notes/tsundoku', 'ftp://ikigaicollective.org/', 'javascript:alert(1)', 'example.com', 'https:\\\\evil.com']) {
+  t = await call('show_page', { page: p });
+  assert.ok(t.startsWith('Not found'), 'refused: ' + p);
+}
+for (const p of ['https://www.ikigaicollective.org/lab-notes/tsundoku', 'http://content.test/lab-notes/tsundoku', 'HTTPS://IKIGAICOLLECTIVE.ORG/']) {
+  t = await call('show_page', { page: p });
+  assert.ok(t.startsWith('Source: https://ikigaicollective.org/'), 'own host accepted: ' + p);
+}
 assert.equal(fetched.length, before, 'cached and allowlisted: no new fetches');
 
 // content cached per instance, refreshed after 5 minutes

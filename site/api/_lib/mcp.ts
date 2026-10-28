@@ -95,9 +95,19 @@ function snippet(d: Doc, terms: string[]) {
 }
 
 // ---------- show_page: resolve slugs, paths and URLs to a known page (allowlist only) ----------
-export function resolve(docs: Doc[], input: string): Doc | undefined {
+const SITE_HOSTS = ['ikigaicollective.org', 'www.ikigaicollective.org'];
+const hostOf = (u?: string) => { try { return u ? new URL(/^https?:\/\//i.test(u) ? u : 'https://' + u).hostname.toLowerCase() : ''; } catch { return ''; } };
+export function resolve(docs: Doc[], input: string, extraHosts: string[] = []): Doc | undefined {
   let p = input.trim();
-  try { if (/^https?:\/\//i.test(p)) p = new URL(p).pathname; } catch { /* keep as typed */ }
+  if (p.startsWith('//') || p.includes('\\')) return undefined; // protocol-relative or backslash tricks
+  if (/^[a-z][a-z0-9+.-]*:/i.test(p)) {
+    // full URL: only http(s), no userinfo, and only our own hosts; nothing else is resolved (or fetched)
+    let u: URL;
+    try { u = new URL(p); } catch { return undefined; }
+    const ok = [...SITE_HOSTS, ...extraHosts.map(hostOf).filter(Boolean)];
+    if (!/^https?:$/.test(u.protocol) || u.username || u.password || !ok.includes(u.hostname.toLowerCase())) return undefined;
+    p = u.pathname;
+  }
   p = p.replace(/[?#].*$/, '').replace(/\.(md|html)$/i, '').replace(/\/+$/, '').toLowerCase();
   if (p === '' || p === '/index' || p === 'index' || p === 'home') p = '/';
   if (!p.startsWith('/')) p = '/' + p;
@@ -136,7 +146,7 @@ export function createServer(o: Options) {
     log(JSON.stringify({ mcp: 'show_page', query: page }));
     let docs: Doc[];
     try { docs = await loadDocs(o); } catch { return text(`The content index is unavailable right now. ${FALLBACK}`); }
-    const d = resolve(docs, page);
+    const d = resolve(docs, page, [o.contentOrigin ?? '', process.env.VERCEL_URL ?? '', process.env.VERCEL_BRANCH_URL ?? '']);
     if (!d) {
       const near = search(docs, page.replace(/^.*?lab-notes\/?|\.(md|html)$/gi, '').replace(/[-/_.]/g, ' '), 3);
       return text(`Not found: "${page}" is not a page or Lab Note on ikigaicollective.org.` + (near.length ? `\n\nDid you mean:\n${near.map(line).join('\n')}` : '') + `\n\n${FALLBACK}`);
