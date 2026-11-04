@@ -1,10 +1,9 @@
 // Google APIs over plain fetch with one OAuth refresh token (dedicated Ikigai account, app published "In production").
-// Scopes: calendar.events, spreadsheets. Preview (PUBLIC_SITE_ENV != production) uses the test event and the '-test' tabs.
+// Scopes: calendar.events, spreadsheets. `live` comes from the request host (_lib/site.ts); preview uses the test event and the '-test' tabs.
 const env = (k: string) => process.env[k];
-const live = () => env('PUBLIC_SITE_ENV') === 'production';
 /** Sheet tab name: test tabs in preview so real sign-ups stay clean. */
-export const tab = (name: string) => (live() ? name : `${name}-test`);
-export const configured = () => ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REFRESH_TOKEN', 'SHEET_ID'].every(env) && !!(live() ? env('LAB_NIGHT_EVENT_ID') : env('LAB_NIGHT_EVENT_ID_PREVIEW'));
+export const tab = (name: string, live: boolean) => (live ? name : `${name}-test`);
+export const configured = (live: boolean) => ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REFRESH_TOKEN', 'SHEET_ID'].every(env) && !!(live ? env('LAB_NIGHT_EVENT_ID') : env('LAB_NIGHT_EVENT_ID_PREVIEW'));
 
 let cached: { token: string; exp: number } | undefined;
 async function accessToken() {
@@ -30,24 +29,24 @@ const MEET = /https:\/\/meet\.google\.com\/[a-z0-9-]+/i;
 export const meetLink = (ev: any): string | undefined => (String(ev.location ?? '').match(MEET) ?? String(ev.description ?? '').match(MEET))?.[0].toLowerCase();
 
 /** Log to the Alerts tab (the sheet's own "notify me right away" rule emails the owner). Never throws. */
-export async function alert(subject: string, text: string) {
+export async function alert(subject: string, text: string, live: boolean) {
   console.error('ALERT', subject, text);
-  await appendRow(tab('Alerts'), [new Date().toISOString(), subject, text]).catch(() => {});
+  await appendRow(tab('Alerts', live), [new Date().toISOString(), subject, text]).catch(() => {});
 }
 
 // Add a guest to the Lab Night event. Patches ONLY `attendees` (no conferenceDataVersion, so conferenceData/location/description cannot change).
 // Before the patch the Meet link must exist (and in production equal PUBLIC_MEET_URL) and guests must be hidden.
 // After it the link, location, description and conferenceData must be identical and guests still hidden. Otherwise roll back and alert.
-export async function addGuest(email: string) {
+export async function addGuest(email: string, live: boolean) {
   const cal = encodeURIComponent(env('GOOGLE_CALENDAR_ID') ?? 'primary');
-  const id = encodeURIComponent((live() ? env('LAB_NIGHT_EVENT_ID') : env('LAB_NIGHT_EVENT_ID_PREVIEW'))!);
+  const id = encodeURIComponent((live ? env('LAB_NIGHT_EVENT_ID') : env('LAB_NIGHT_EVENT_ID_PREVIEW'))!);
   const base = `https://www.googleapis.com/calendar/v3/calendars/${cal}/events/${id}`;
   const expected = env('PUBLIC_MEET_URL')?.replace(/\/$/, '').toLowerCase();
 
   const ev = await g(base);
   const link = meetLink(ev);
-  const before = ev.guestsCanSeeOtherGuests !== false ? 'guestsCanSeeOtherGuests is not false' : !link ? 'no Meet link found in the event location or description' : live() && link !== expected ? `Meet link ${link} is not PUBLIC_MEET_URL (${expected})` : '';
-  if (before) { await alert('Lab Night event is wrong, sign-ups paused', `${before}\nEvent ${ev.id}. No guest was added.`); throw new Error(before); }
+  const before = ev.guestsCanSeeOtherGuests !== false ? 'guestsCanSeeOtherGuests is not false' : !link ? 'no Meet link found in the event location or description' : live && link !== expected ? `Meet link ${link} is not PUBLIC_MEET_URL (${expected})` : '';
+  if (before) { await alert('Lab Night event is wrong, sign-ups paused', `${before}\nEvent ${ev.id}. No guest was added.`, live); throw new Error(before); }
   const attendees: { email: string }[] = ev.attendees ?? [];
   if (attendees.some((a) => a.email.toLowerCase() === email)) return { added: false };
 
@@ -56,7 +55,7 @@ export async function addGuest(email: string) {
   const after = out.guestsCanSeeOtherGuests !== false ? 'guestsCanSeeOtherGuests is not false' : meetLink(out) !== link ? `Meet link changed to ${meetLink(out)}` : !['location', 'description', 'conferenceData'].every(same) ? 'location, description or conferenceData changed' : '';
   if (after) {
     await g(`${base}?sendUpdates=none`, { method: 'PATCH', body: JSON.stringify({ attendees }) }).catch(() => {});
-    await alert('Lab Night event changed after a sign-up, rolled back', `${after}\nEvent ${out.id}. The guest list was restored; check the event by hand (the Meet link must stay David's).`);
+    await alert('Lab Night event changed after a sign-up, rolled back', `${after}\nEvent ${out.id}. The guest list was restored; check the event by hand (the Meet link must stay David's).`, live);
     throw new Error(after);
   }
   return { added: true };

@@ -4,6 +4,7 @@ Object.assign(process.env, { GOOGLE_CLIENT_ID: 'x', GOOGLE_CLIENT_SECRET: 'x', G
 const { addGuest } = await import('../api/_lib/google.ts');
 
 const good = { id: 'ev', guestsCanSeeOtherGuests: false, location: 'https://meet.google.com/yxb-oakp-fov', description: 'Join: https://meet.google.com/yxb-oakp-fov', attendees: [{ email: 'a@x.org' }] };
+let live = false;
 const run = async (get, patched) => {
   const calls = [];
   globalThis.fetch = async (url, init = {}) => {
@@ -12,7 +13,7 @@ const run = async (get, patched) => {
     const body = u.includes('oauth2') ? { access_token: 't', expires_in: 3600 } : u.includes('sheets') ? {} : m === 'PATCH' ? patched : get;
     return new Response(JSON.stringify(body), { status: 200 });
   };
-  const res = await addGuest('new@x.org').then((r) => r, (e) => e);
+  const res = await addGuest('new@x.org', live).then((r) => r, (e) => e);
   return { res, calls };
 };
 
@@ -34,10 +35,10 @@ assert.ok(r.res instanceof Error && r.calls.filter((c) => c.startsWith('PATCH ev
 r = await run(good, { ...good, conferenceData: { x: 1 } });
 assert.ok(r.res instanceof Error, 'conferenceData appeared: rolled back');
 
-process.env.PUBLIC_SITE_ENV = 'production'; process.env.LAB_NIGHT_EVENT_ID = 'ev'; process.env.PUBLIC_MEET_URL = 'https://meet.google.com/other-link';
+live = true; process.env.LAB_NIGHT_EVENT_ID = 'ev'; process.env.PUBLIC_MEET_URL = 'https://meet.google.com/other-link';
 r = await run(good, good);
 assert.ok(r.res instanceof Error && !r.calls.some((c) => c.startsWith('PATCH event')), 'production: link must equal PUBLIC_MEET_URL');
-delete process.env.PUBLIC_SITE_ENV;
+live = false;
 
 r = await run({ ...good, attendees: [{ email: 'NEW@x.org' }] }, good);
 assert.equal(r.res.added, false);

@@ -2,12 +2,13 @@
 import '../styles/global.css';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
-import { IS_LIVE } from '../lib/env';
+import { LIVE_HOST } from '../lib/env';
 import { SITE } from '../config';
 
 interface Props { title?: string; description?: string; overlayNav?: boolean; image?: string; canonical?: string; type?: 'website' | 'article'; jsonld?: object | object[]; noindex?: boolean }
 const { overlayNav = false, image, canonical, type = 'website', jsonld, noindex = false, title, description = 'Life design through experimentation. A weekly Lab Night for people building toward meaning.' } = Astro.props;
-const banner = !IS_LIVE && SITE.previewFeedbackUrl;
+// Banner is in the HTML everywhere but shown only off the real domain (html.preview, set before first paint).
+const banner = SITE.previewFeedbackUrl;
 const origin = 'https://ikigaicollective.org';
 const path = Astro.url.pathname.replace(/(\/index)?\.html$/, '').replace(/\/$/, '') || '/';
 const self = origin + (path === '/' ? '' : path);
@@ -16,13 +17,14 @@ const mdPath = path === '/' ? '/index.md' : `${path}.md`;
 const full = title ? `${title} | Ikigai Collective` : 'Ikigai Collective | Life design through experimentation';
 ---
 <!doctype html>
-<html lang="en" data-theme="ikigai-night">
+<html lang="en" data-theme="ikigai-night" data-live={LIVE_HOST}>
   <head>
     <meta charset="utf-8" />
     <script is:inline>
       // Decide motion before first paint. No class = fully static page (also what no-JS visitors get).
       try {
         var d = document.documentElement; d.classList.add('js');
+        if (location.hostname !== d.dataset.live) d.classList.add('preview');
         if (matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('rm');
         else {
           d.classList.add('motion');
@@ -37,7 +39,7 @@ const full = title ? `${title} | Ikigai Collective` : 'Ikigai Collective | Life 
     {!noindex && <link rel="alternate" type="text/markdown" href={mdPath} />}
     <link rel="alternate" type="application/rss+xml" title="Ikigai Collective Lab Notes" href="/lab-notes/rss.xml" />
     <link rel="alternate" type="application/json" title="Ikigai Collective Lab Notes (JSON)" href="/lab-notes/notes.json" />
-    {(!IS_LIVE || noindex) && <meta name="robots" content="noindex, nofollow" />}
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preload" href="/fonts/charter-regular.woff2" as="font" type="font/woff2" crossorigin />
     <meta property="og:site_name" content="Ikigai Collective" />
@@ -53,17 +55,21 @@ const full = title ? `${title} | Ikigai Collective` : 'Ikigai Collective | Life 
     <meta name="twitter:image" content={ogImage} />
     <meta name="theme-color" content="#0a0a0a" />
     {jsonld && <script type="application/ld+json" set:html={JSON.stringify(jsonld)} />}
-    {IS_LIVE && <script is:inline defer src="https://cloud.umami.is/script.js" data-website-id="5c467d4a-bf8a-42c0-a76b-a14753c54749" data-domains="ikigaicollective.org"></script>}
+    <script is:inline>
+      // Umami only on the real domain.
+      if (location.hostname === document.documentElement.dataset.live) document.head.append(Object.assign(document.createElement('script'), { defer: true, src: 'https://cloud.umami.is/script.js', dataset: { websiteId: '5c467d4a-bf8a-42c0-a76b-a14753c54749', domains: 'ikigaicollective.org' } }));
+    </script>
     <meta name="generator" content={Astro.generator} />
+    <style is:inline set:html={`html.preview [data-preview-banner]{display:flex}[data-overlay]{top:0}${banner ? 'html.preview [data-overlay]{top:2.5rem}' : ''}`} />
   </head>
   <body>
     <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-fg focus:px-4 focus:py-2 focus:text-bg">Skip to content</a>
     {banner && (
-      <div role="note" class="relative z-40 flex h-10 items-center justify-center bg-copper px-4 text-center text-[14px] text-bg">
+      <div role="note" data-preview-banner class="relative z-40 hidden h-10 items-center justify-center bg-copper px-4 text-center text-[14px] text-bg">
         <span class="truncate">Preview · <a href={SITE.previewFeedbackUrl} class="font-bold text-bg underline" target="_blank" rel="noopener">tell us what you think</a></span>
       </div>
     )}
-    <div class={overlayNav ? 'absolute inset-x-0 z-30' : 'relative z-30'} style={overlayNav ? `top:${banner ? '2.5rem' : '0'}` : undefined}><Nav /></div>
+    <div class={overlayNav ? 'absolute inset-x-0 z-30' : 'relative z-30'} data-overlay={overlayNav ? '' : undefined}><Nav /></div>
     <main id="main"><slot /></main>
     <div id="sr-status" class="sr-only" role="status" aria-live="polite"></div>
     <Footer />

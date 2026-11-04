@@ -54,7 +54,7 @@ document.querySelectorAll<HTMLFormElement>('form[data-invite-form], form[data-pa
     submit.textContent = submit.dataset.sending ?? 'Sending...';
     note.hidden = true;
     try {
-      // Preview (neither production nor PUBLIC_FORMS_LIVE=1): send and store nothing, and say so instead of faking a success.
+      // Kill switch (PUBLIC_FORMS_LIVE=0): send and store nothing, and say so instead of faking a success.
       if (!FORMS_LIVE) {
         submit.disabled = false;
         submit.textContent = label;
@@ -66,6 +66,15 @@ document.querySelectorAll<HTMLFormElement>('form[data-invite-form], form[data-pa
       const res = await fetch(form.action, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(Object.fromEntries(new FormData(form))) });
       if (res.status === 404 || res.status === 503) throw Object.assign(new Error('not-open'), { soft: true });
       if (!res.ok) throw new Error(String(res.status));
+      // Preview host: the API used the test event and '-test' tabs; show the preview message, not the success state.
+      if ((await res.json().catch(() => ({}))).preview) {
+        submit.disabled = false;
+        submit.textContent = label;
+        note.textContent = PREVIEW[kind];
+        note.hidden = false;
+        announce(PREVIEW[kind]);
+        return;
+      }
       track(`${kind}_success`);
       if (success) { if (fields.hasAttribute('data-fade') && canMotion()) { fields.classList.add('is-out'); await new Promise((r) => setTimeout(r, 200)); } fields.hidden = true; success.hidden = false; success.focus?.(); } else { submit.textContent = 'Invite sent'; }
       announce(success?.textContent ?? 'Done');

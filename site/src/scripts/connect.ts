@@ -1,10 +1,10 @@
-import { IS_LIVE } from '../lib/env';
+import { LIVE_HOST } from '../lib/env';
 import { announce, store, track } from '../lib/track';
 import copy from '../content/site/copy.json';
 
 const PROD = 'https://ikigaicollective.org/mcp';
 // Production is the real address; anywhere else (preview, local) it follows the origin the visitor is on.
-const address = IS_LIVE ? PROD : `${location.origin}/mcp`;
+const address = location.hostname === LIVE_HOST ? PROD : `${location.origin}/mcp`;
 document.querySelectorAll('[data-addr]').forEach((el) => (el.textContent = address));
 
 // Copy buttons: [data-copy-from="<id>"] copies that element's text, flashes "Copied" for 2s, tells screen readers.

@@ -292,12 +292,42 @@
       "permanent": true
     },
     {
+      "source": "/index",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/lab-notes/index",
+      "destination": "/lab-notes",
+      "permanent": true
+    },
+    {
       "source": "/:path(.*)\\.html",
       "destination": "/:path",
       "permanent": true
     }
   ],
   "rewrites": [
+    {
+      "source": "/robots.txt",
+      "has": [
+        {
+          "type": "host",
+          "value": "ikigaicollective.org"
+        }
+      ],
+      "destination": "/robots-live.txt"
+    },
+    {
+      "source": "/robots.txt",
+      "missing": [
+        {
+          "type": "host",
+          "value": "ikigaicollective.org"
+        }
+      ],
+      "destination": "/robots-noindex.txt"
+    },
     {
       "source": "/mcp",
       "destination": "/api/mcp"
@@ -315,6 +345,23 @@
     {
       "path": "/api/cron/substack",
       "schedule": "17 5 * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "missing": [
+        {
+          "type": "host",
+          "value": "ikigaicollective.org"
+        }
+      ],
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
     }
   ]
 }

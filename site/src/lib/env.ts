@@ -1,4 +1,6 @@
-// Fail closed: the site is indexable and forms are live only when PUBLIC_SITE_ENV=production (set at cutover).
+// Built as production everywhere; live vs preview is decided by hostname in the browser and by Host in api/ (api/_lib/site.ts).
 export const IS_LIVE = import.meta.env.PUBLIC_SITE_ENV === 'production';
-// Preview switch, off by default: PUBLIC_FORMS_LIVE=1 makes the forms call the real API (test event and '-test' sheet tabs) without going live.
-export const FORMS_LIVE = IS_LIVE || import.meta.env.PUBLIC_FORMS_LIVE === '1';
+// Kill switch: PUBLIC_FORMS_LIVE=0 stops the forms sending anything (needs a redeploy; the API also honours it at runtime).
+export const FORMS_LIVE = import.meta.env.PUBLIC_FORMS_LIVE !== '0';
+/** The one hostname that is indexed, counted and shown without the preview banner. */
+export const LIVE_HOST = 'ikigaicollective.org';

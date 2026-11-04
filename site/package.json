@@ -12,7 +12,8 @@
     "astro": "astro",
     "test:labnight": "node tests/labnight.mjs",
     "test:guard": "node --experimental-strip-types tests/guard.mjs",
-    "test:mcp": "node --experimental-strip-types tests/mcp.mjs"
+    "test:mcp": "node --experimental-strip-types tests/mcp.mjs",
+    "test:host": "node --experimental-strip-types tests/host.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
