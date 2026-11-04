@@ -42,7 +42,7 @@ document.querySelectorAll<HTMLFormElement>('form[data-invite-form], form[data-pa
   const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
   if (siteKey && FORMS_LIVE) {
     submit.insertAdjacentHTML('beforebegin', `<div class="cf-turnstile" data-sitekey="${siteKey}" data-theme="auto"></div>`);
-    if (!document.querySelector('script[data-turnstile]')) document.head.append(Object.assign(document.createElement('script'), { src: 'https://challenges.cloudflare.com/turnstile/v0/api.js', async: true, dataset: { turnstile: '' } }));
+    if (!document.querySelector('script[data-turnstile]')) { const ts = Object.assign(document.createElement('script'), { src: 'https://challenges.cloudflare.com/turnstile/v0/api.js', async: true }); ts.dataset.turnstile = ''; document.head.append(ts); }
   }
 
   form.addEventListener('submit', async (e) => {

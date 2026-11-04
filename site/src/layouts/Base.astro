@@ -57,7 +57,11 @@ const full = title ? `${title} | Ikigai Collective` : 'Ikigai Collective | Life 
     {jsonld && <script type="application/ld+json" set:html={JSON.stringify(jsonld)} />}
     <script is:inline>
       // Umami only on the real domain.
-      if (location.hostname === document.documentElement.dataset.live) document.head.append(Object.assign(document.createElement('script'), { defer: true, src: 'https://cloud.umami.is/script.js', dataset: { websiteId: '5c467d4a-bf8a-42c0-a76b-a14753c54749', domains: 'ikigaicollective.org' } }));
+      if (location.hostname === document.documentElement.dataset.live) {
+        var u = document.createElement('script'); u.defer = true; u.src = 'https://cloud.umami.is/script.js';
+        u.setAttribute('data-website-id', '5c467d4a-bf8a-42c0-a76b-a14753c54749'); u.setAttribute('data-domains', 'ikigaicollective.org');
+        document.head.append(u);
+      }
     </script>
     <meta name="generator" content={Astro.generator} />
     <style is:inline set:html={`html.preview [data-preview-banner]{display:flex}[data-overlay]{top:0}${banner ? 'html.preview [data-overlay]{top:2.5rem}' : ''}`} />
