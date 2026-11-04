@@ -18,6 +18,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
     "@tailwindcss/vite": "^4.3.3",
+    "@vercel/functions": "^3.10.6",
     "astro": "^7.4.1",
     "daisyui": "^5.7.50",
     "fast-xml-parser": "^5.11.2",

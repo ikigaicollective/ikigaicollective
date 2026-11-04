@@ -51,7 +51,7 @@ Before the switchover, use the preview deployment's `/mcp` instead.
   - one per `initialize`: `{"mcp":"initialize","client":{"name":"<app>","version":"<version>"}}`, the client app's self-reported `clientInfo` name and version (e.g. `claude-code`, `cursor`), trimmed to short strings. It identifies the app, not the person.
   - one per tool call: `{"mcp":"<tool>","query":"<query>"}`.
 
-  The server is stateless and MCP sends `clientInfo` only with `initialize`, so tool-call lines don't carry the client name. No IPs, headers (including `user-agent`) or other request data are logged.
+  The server is stateless and MCP sends `clientInfo` only with `initialize`, so tool-call lines don't carry the client name. No IPs, headers (including `user-agent`) or other request data are logged. When `UMAMI_WEBSITE_ID` is set (a separate Umami website, not a secret; optional `UMAMI_HOST`), the same counts are also sent as events `mcp_initialize` (`client`, `version`) and `mcp_tool` (`tool`, `query` trimmed to 200 characters, `found`) so the pilot review has running totals; the payload has no IP and no request headers, and a failed send never changes the answer.
 - **Caching:** the index and markdown are fetched from the same deployment and cached per instance for 5 minutes. `MCP_CONTENT_ORIGIN` (optional, not a secret) points the server at another origin.
 
 ## Code and tests
