@@ -13,5 +13,7 @@ declare namespace NodeJS {
     DISCORD_LOOP_CHANNEL_ID?: string;
     DISCORD_WEBSITE_TAG_ID?: string;
     MCP_CONTENT_ORIGIN?: string;
+    UMAMI_WEBSITE_ID?: string; // non-secret; MCP event counts. Unset = no events.
+    UMAMI_HOST?: string; // optional collector origin, default https://gateway.umami.is
   }
 }

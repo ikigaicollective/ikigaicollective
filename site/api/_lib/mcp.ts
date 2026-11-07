@@ -2,8 +2,11 @@
 // Content comes from the site's own public build output: /lab-notes/notes.json plus the markdown twin of every page (<path>.md).
 // Logging: one line per tool call with the tool name and the query, and one line per initialize with the client app's name and version
 // (clientInfo, e.g. "claude-code" / "1.2.3"), to count connected agents. Nothing about the person: no IPs, no headers, nothing stored.
+// The same counts are also sent to Umami (mcp_initialize, mcp_tool) when UMAMI_WEBSITE_ID is set, so the pilot has running totals.
+// That send is fire-and-forget and carries no IP or request headers. An unset website id (preview, local, tests) sends nothing.
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
+import { waitUntil } from '@vercel/functions';
 import { z } from 'zod';
 
 export const ORIGIN = 'https://ikigaicollective.org';
@@ -130,11 +133,17 @@ export function createServer(o: Options) {
     annotations: ro,
   }, async ({ query, limit }) => {
     log(JSON.stringify({ mcp: 'search', query }));
-    let docs: Doc[];
-    try { docs = await loadDocs(o); } catch { return text(`The content index is unavailable right now. ${FALLBACK}`); }
-    const hits = search(docs, query, limit ?? 5);
-    if (!hits.length) return text(`Nothing on ikigaicollective.org matches "${query}". ${FALLBACK}`);
-    return text(`${hits.length} result${hits.length > 1 ? 's' : ''} for "${query}":\n\n` + hits.map((h) => line(h) + (h.snippet ? `\n  > ${h.snippet}` : '')).join('\n') + `\n\nRead one in full with show_page (pass the link or the slug).`);
+    let found = false;
+    try {
+      let docs: Doc[];
+      try { docs = await loadDocs(o); } catch { return text(`The content index is unavailable right now. ${FALLBACK}`); }
+      const hits = search(docs, query, limit ?? 5);
+      found = hits.length > 0;
+      if (!hits.length) return text(`Nothing on ikigaicollective.org matches "${query}". ${FALLBACK}`);
+      return text(`${hits.length} result${hits.length > 1 ? 's' : ''} for "${query}":\n\n` + hits.map((h) => line(h) + (h.snippet ? `\n  > ${h.snippet}` : '')).join('\n') + `\n\nRead one in full with show_page (pass the link or the slug).`);
+    } finally {
+      track('mcp_tool', { tool: 'search', query: clip(query), found });
+    }
   });
 
   server.registerTool('show_page', {
@@ -144,17 +153,23 @@ export function createServer(o: Options) {
     annotations: ro,
   }, async ({ page }) => {
     log(JSON.stringify({ mcp: 'show_page', query: page }));
-    let docs: Doc[];
-    try { docs = await loadDocs(o); } catch { return text(`The content index is unavailable right now. ${FALLBACK}`); }
-    const d = resolve(docs, page, [o.contentOrigin ?? '', process.env.VERCEL_URL ?? '', process.env.VERCEL_BRANCH_URL ?? '']);
-    if (!d) {
-      const near = search(docs, page.replace(/^.*?lab-notes\/?|\.(md|html)$/gi, '').replace(/[-/_.]/g, ' '), 3);
-      return text(`Not found: "${page}" is not a page or Lab Note on ikigaicollective.org.` + (near.length ? `\n\nDid you mean:\n${near.map(line).join('\n')}` : '') + `\n\n${FALLBACK}`);
+    let found = false;
+    try {
+      let docs: Doc[];
+      try { docs = await loadDocs(o); } catch { return text(`The content index is unavailable right now. ${FALLBACK}`); }
+      const d = resolve(docs, page, [o.contentOrigin ?? '', process.env.VERCEL_URL ?? '', process.env.VERCEL_BRANCH_URL ?? '']);
+      if (!d) {
+        const near = search(docs, page.replace(/^.*?lab-notes\/?|\.(md|html)$/gi, '').replace(/[-/_.]/g, ' '), 3);
+        return text(`Not found: "${page}" is not a page or Lab Note on ikigaicollective.org.` + (near.length ? `\n\nDid you mean:\n${near.map(line).join('\n')}` : '') + `\n\n${FALLBACK}`);
+      }
+      found = true;
+      const body = d.body ?? (await get(o, mdPath(d.path)).then(clean, () => undefined));
+      if (!body) return text(`${d.title}: ${d.summary}\nRead it at ${urlOf(d.path)}`);
+      const cut = body.length > MAX_PAGE ? body.slice(0, MAX_PAGE) + `\n\n[…truncated, full text at ${urlOf(d.path)}]` : body;
+      return text(`Source: ${urlOf(d.path)} (CC BY-SA 4.0, Ikigai Collective)\n\n${cut}`);
+    } finally {
+      track('mcp_tool', { tool: 'show_page', query: clip(page), found });
     }
-    const body = d.body ?? (await get(o, mdPath(d.path)).then(clean, () => undefined));
-    if (!body) return text(`${d.title}: ${d.summary}\nRead it at ${urlOf(d.path)}`);
-    const cut = body.length > MAX_PAGE ? body.slice(0, MAX_PAGE) + `\n\n[…truncated, full text at ${urlOf(d.path)}]` : body;
-    return text(`Source: ${urlOf(d.path)} (CC BY-SA 4.0, Ikigai Collective)\n\n${cut}`);
   });
   return server;
 }
@@ -182,6 +197,26 @@ const rpcError = (status: number, code: number, message: string, extra: Record<s
 
 // The client app's self-reported name and version, trimmed to short plain strings. Nothing else from clientInfo is kept.
 const short = (v: unknown, n: number) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, n) : '');
+const clip = (v: string, n = 200) => v.trim().slice(0, n);
+
+// Running totals for the 8-week review. Umami derives geo from the sending IP (Vercel's), so visitors and
+// locations are meaningless here: count by event name and the client/query properties. No IP, no request headers.
+const UMAMI_UA = 'ikigai-mcp/1.0';
+function track(name: string, data: Record<string, string | boolean>) {
+  try {
+    const website = process.env.UMAMI_WEBSITE_ID?.trim();
+    if (!website) return;
+    const base = (process.env.UMAMI_HOST || 'https://gateway.umami.is').trim().replace(/\/+$/, '');
+    const pending = fetch(`${base}/api/send`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'user-agent': UMAMI_UA },
+      body: JSON.stringify({ type: 'event', payload: { website, hostname: 'ikigaicollective.org', url: '/mcp', name, data } }),
+      signal: AbortSignal.timeout(1500),
+    }).then(() => undefined, () => undefined);
+    try { waitUntil(pending); } catch { /* no request context (local, tests): the send still runs, and errors are already swallowed */ }
+  } catch { /* a failed or slow send must not change the tool answer */ }
+}
+
 export function clientOf(info: unknown): { name: string; version?: string } | undefined {
   if (!info || typeof info !== 'object') return undefined;
   const { name, version } = info as Record<string, unknown>;
@@ -207,7 +242,10 @@ export async function handle(req: Request, o: Options): Promise<Response> {
     const res = await transport.handleRequest(req, { parsedBody: body });
     // Stateless: clientInfo arrives only with initialize (set by the SDK once it has validated the request), never with later tool calls.
     const client = clientOf(server.server.getClientVersion());
-    if (client) (o.log ?? ((l: string) => console.log(l)))(JSON.stringify({ mcp: 'initialize', client }));
+    if (client) {
+      (o.log ?? ((l: string) => console.log(l)))(JSON.stringify({ mcp: 'initialize', client }));
+      track('mcp_initialize', client.version ? { client: client.name, version: client.version } : { client: client.name });
+    }
     const headers = new Headers(res.headers);
     for (const [k, v] of Object.entries(CORS)) headers.set(k, v);
     headers.set('cache-control', 'no-store');
