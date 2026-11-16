@@ -13,7 +13,10 @@
     "test:labnight": "node tests/labnight.mjs",
     "test:guard": "node --experimental-strip-types tests/guard.mjs",
     "test:mcp": "node --experimental-strip-types tests/mcp.mjs",
-    "test:host": "node --experimental-strip-types tests/host.mjs"
+    "test:host": "node --experimental-strip-types tests/host.mjs",
+    "test:substack": "node --experimental-strip-types tests/substack.mjs",
+    "test:forms": "node --experimental-strip-types tests/forms.mjs",
+    "test": "npm run test:labnight && npm run test:guard && npm run test:mcp && npm run test:host && npm run test:substack && npm run test:forms"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",

@@ -42,4 +42,25 @@ live = false;
 
 r = await run({ ...good, attendees: [{ email: 'NEW@x.org' }] }, good);
 assert.equal(r.res.added, false);
+
+// Concurrent sign-ups: the PATCH carries If-Match with the event etag; on 412 it re-reads and keeps the other guest.
+{
+  let version = 1, list = [...good.attendees];
+  const patches = [];
+  globalThis.fetch = async (url, init = {}) => {
+    const u = String(url), m = init.method ?? 'GET';
+    if (u.includes('oauth2')) return new Response(JSON.stringify({ access_token: 't', expires_in: 3600 }));
+    if (u.includes('sheets')) return new Response('{}');
+    if (m === 'GET') return new Response(JSON.stringify({ ...good, etag: `"v${version}"`, attendees: list }));
+    patches.push({ ifMatch: new Headers(init.headers).get('if-match'), attendees: JSON.parse(init.body).attendees.map((a) => a.email) });
+    if (patches.length === 1) { list = [...list, { email: 'other@x.org' }]; version += 1; } // another sign-up lands between our GET and PATCH
+    if (new Headers(init.headers).get('if-match') !== `"v${version}"`) return new Response('{"error":"conditionNotMet"}', { status: 412 });
+    list = JSON.parse(init.body).attendees; version += 1;
+    return new Response(JSON.stringify({ ...good, etag: `"v${version}"`, attendees: list }));
+  };
+  const res = await addGuest('new@x.org', false);
+  assert.equal(res.added, true);
+  assert.deepEqual(patches.map((p) => p.ifMatch), ['"v1"', '"v2"'], 'PATCH sends If-Match and retries after 412');
+  assert.deepEqual(list.map((a) => a.email), ['a@x.org', 'other@x.org', 'new@x.org'], 'no guest lost');
+}
 console.log('guard: all passed');

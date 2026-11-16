@@ -43,22 +43,32 @@ export async function addGuest(email: string, live: boolean) {
   const base = `https://www.googleapis.com/calendar/v3/calendars/${cal}/events/${id}`;
   const expected = env('PUBLIC_MEET_URL')?.replace(/\/$/, '').toLowerCase();
 
-  const ev = await g(base);
-  const link = meetLink(ev);
-  const before = ev.guestsCanSeeOtherGuests !== false ? 'guestsCanSeeOtherGuests is not false' : !link ? 'no Meet link found in the event location or description' : live && link !== expected ? `Meet link ${link} is not PUBLIC_MEET_URL (${expected})` : '';
-  if (before) { await alert('Lab Night event is wrong, sign-ups paused', `${before}\nEvent ${ev.id}. No guest was added.`, live); throw new Error(before); }
-  const attendees: { email: string }[] = ev.attendees ?? [];
-  if (attendees.some((a) => a.email.toLowerCase() === email)) return { added: false };
+  // If-Match on the event etag: a sign-up that lands between our GET and PATCH makes the PATCH fail with 412, so re-read and retry.
+  const ifMatch = (etag?: string): Record<string, string> => (etag ? { 'if-match': etag } : {});
+  for (let attempt = 1; ; attempt++) {
+    const ev = await g(base);
+    const link = meetLink(ev);
+    const before = ev.guestsCanSeeOtherGuests !== false ? 'guestsCanSeeOtherGuests is not false' : !link ? 'no Meet link found in the event location or description' : live && link !== expected ? `Meet link ${link} is not PUBLIC_MEET_URL (${expected})` : '';
+    if (before) { await alert('Lab Night event is wrong, sign-ups paused', `${before}\nEvent ${ev.id}. No guest was added.`, live); throw new Error(before); }
+    const attendees: { email: string }[] = ev.attendees ?? [];
+    if (attendees.some((a) => a.email.toLowerCase() === email)) return { added: false };
 
-  const out = await g(`${base}?sendUpdates=all`, { method: 'PATCH', body: JSON.stringify({ attendees: [...attendees, { email }] }) });
-  const same = (k: string) => JSON.stringify(out[k] ?? null) === JSON.stringify(ev[k] ?? null);
-  const after = out.guestsCanSeeOtherGuests !== false ? 'guestsCanSeeOtherGuests is not false' : meetLink(out) !== link ? `Meet link changed to ${meetLink(out)}` : !['location', 'description', 'conferenceData'].every(same) ? 'location, description or conferenceData changed' : '';
-  if (after) {
-    await g(`${base}?sendUpdates=none`, { method: 'PATCH', body: JSON.stringify({ attendees }) }).catch(() => {});
-    await alert('Lab Night event changed after a sign-up, rolled back', `${after}\nEvent ${out.id}. The guest list was restored; check the event by hand (the Meet link must stay David's).`, live);
-    throw new Error(after);
+    let out: any;
+    try {
+      out = await g(`${base}?sendUpdates=all`, { method: 'PATCH', headers: ifMatch(ev.etag), body: JSON.stringify({ attendees: [...attendees, { email }] }) });
+    } catch (e) {
+      if (attempt < 5 && (e as Error).message.startsWith('google 412 ')) continue;
+      throw e;
+    }
+    const same = (k: string) => JSON.stringify(out[k] ?? null) === JSON.stringify(ev[k] ?? null);
+    const after = out.guestsCanSeeOtherGuests !== false ? 'guestsCanSeeOtherGuests is not false' : meetLink(out) !== link ? `Meet link changed to ${meetLink(out)}` : !['location', 'description', 'conferenceData'].every(same) ? 'location, description or conferenceData changed' : '';
+    if (after) {
+      await g(`${base}?sendUpdates=none`, { method: 'PATCH', headers: ifMatch(out.etag), body: JSON.stringify({ attendees }) }).catch(() => {});
+      await alert('Lab Night event changed after a sign-up, rolled back', `${after}\nEvent ${out.id}. The guest list was restored; check the event by hand (the Meet link must stay David's).`, live);
+      throw new Error(after);
+    }
+    return { added: true };
   }
-  return { added: true };
 }
 
 export async function appendRow(sheetTab: string, row: string[]) {
