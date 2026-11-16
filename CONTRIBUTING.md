@@ -10,7 +10,7 @@ Thanks for helping. This repo holds the Ikigai Collective website and its Lab No
 
 ## The one exception: the Substack import
 
-New Lab Notes are imported from Substack by a daily automated job (`site/api/cron/substack.ts`, with `.github/workflows/substack.yml` as a manual fallback). It commits new notes directly to `site-v2` under `site/src/content/notes/` and `site/src/assets/covers/`. Don't hand-edit imported notes unless the change is agreed in an issue, since edits should usually happen on Substack.
+New Lab Notes are imported from Substack by a daily automated job (`site/api/cron/substack.ts`; the manual fallback is the local import in the [README](README.md#importing-lab-notes-from-substack)). It commits new notes directly to `site-v2` under `site/src/content/notes/` and `site/src/assets/covers/`. Don't hand-edit imported notes unless the change is agreed in an issue, since edits should usually happen on Substack.
 
 ## The stack and build
 

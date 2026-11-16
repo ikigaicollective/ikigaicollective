@@ -14,7 +14,7 @@ assert.equal(f.canonical, 'https://ikigaicollective.substack.com/p/a');
 assert.equal(f.week, 25);
 assert.equal(f.t, +new Date('2026-10-01'));
 
-// plan(): skips known slug, known canonical, near-date twin; numbers new weeks from the max
+// plan(): skips known slug and known canonical; imports a distinct post even within 2 days of another note; numbers new weeks from the max
 const existing = facts([
   note('known-slug', '2026-09-01', 20),
   note('other', '2026-09-08', 21, 'https://ikigaicollective.substack.com/p/known-link'),
@@ -24,14 +24,17 @@ const skipped = [];
 const out = plan([
   item('known-slug', 'Tue, 01 Sep 2026 20:00:00 GMT'),
   item('known-link', 'Tue, 08 Sep 2026 20:00:00 GMT'),
-  item('twin-of-seeded', 'Wed, 16 Sep 2026 20:00:00 GMT'),
+  item('same-week-as-seeded', 'Wed, 16 Sep 2026 20:00:00 GMT'),
   item('new-one', 'Thu, 01 Oct 2026 20:00:00 GMT'),
+  item('same-day-as-new-one', 'Thu, 01 Oct 2026 21:00:00 GMT'),
+  item('new-two', 'Thu, 08 Oct 2026 20:00:00 GMT'),
   item('new-two', 'Thu, 08 Oct 2026 20:00:00 GMT'),
 ], existing, (m) => skipped.push(m));
-assert.deepEqual(out.map((p) => [p.slug, p.week, p.date]), [['new-one', 23, '2026-10-01'], ['new-two', 24, '2026-10-08']]);
-assert.equal(skipped.length, 1);
-assert.match(skipped[0], /twin-of-seeded/);
-assert.match(out[0].md(false), /^canonical: "https:\/\/ikigaicollective\.substack\.com\/p\/new-one"$/m);
+assert.deepEqual(out.map((p) => [p.slug, p.week, p.date]), [
+  ['same-week-as-seeded', 23, '2026-09-16'], ['new-one', 24, '2026-10-01'], ['same-day-as-new-one', 25, '2026-10-01'], ['new-two', 26, '2026-10-08'],
+]);
+assert.deepEqual(skipped, []);
+assert.match(out[1].md(false), /^canonical: "https:\/\/ikigaicollective\.substack\.com\/p\/new-one"$/m);
 
 // Cron handler: stub fetch
 const rss = (items) => `<?xml version="1.0"?><rss><channel>${items.map((i) => `<item><title>${i.title}</title><link>${i.link}</link><pubDate>${i.pubDate}</pubDate><content:encoded><![CDATA[${i['content:encoded']}]]></content:encoded></item>`).join('')}</channel></rss>`;
