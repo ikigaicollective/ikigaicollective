@@ -9,6 +9,7 @@ Usage: python3 lab-notes/build.py   (run from the repo root)
 """
 from __future__ import annotations
 
+import html as htmllib
 import re
 import subprocess
 from datetime import date
@@ -65,7 +66,7 @@ PAGE = """<!DOCTYPE html>
 </article>
 <div class="footer">
 <p>The open lab notebook of the <a href="/">Ikigai Collective</a> — Curiosity · Agency · Compassion.
-Lab Night is every Thursday at 21:00 Rome time (CEST) on <a href="https://discord.gg/4rM6FqjVDE">our Discord</a>.
+Lab Night is every Thursday at 21:00 Rome time on <a href="https://discord.gg/4rM6FqjVDE">our Discord</a>.
 Content is <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.</p>
 </div>
 </div>
@@ -97,7 +98,7 @@ INDEX = """<!DOCTYPE html>
 {items}
 </ul>
 <div class="footer">
-<p>New notes appear after each Lab Night (Thursdays 21:00 Rome time (CEST), <a href="https://discord.gg/4rM6FqjVDE">Discord</a>).
+<p>New notes appear after each Lab Night (Thursdays 21:00 Rome time, <a href="https://discord.gg/4rM6FqjVDE">Discord</a>).
 Content is <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.</p>
 </div>
 </div>
@@ -140,7 +141,7 @@ def main() -> None:
     posts = sorted((parse(p) for p in SRC.glob("*.md")), key=lambda m: m["date"])
     for m in posts:
         html = PAGE.format(
-            title=m["title"], desc=first_sentence(m["body_md"]), style=STYLE,
+            title=htmllib.escape(m["title"]), desc=htmllib.escape(first_sentence(m["body_md"])), style=STYLE,
             week=m["week"], pretty_date=pretty(m["date"]), body=md_to_html(m["body_md"]),
             slug=m["slug"],
         )
@@ -148,7 +149,7 @@ def main() -> None:
         print("built", m["slug"] + ".html")
     items = "\n".join(
         f'<li><span class="d">{pretty(m["date"])}</span> '
-        f'<a href="/lab-notes/{m["slug"]}.html">{m["title"]}</a></li>'
+        f'<a href="/lab-notes/{m["slug"]}.html">{htmllib.escape(m["title"])}</a></li>'
         for m in reversed(posts)
     )
     (ROOT / "index.html").write_text(INDEX.format(style=STYLE, items=items), encoding="utf-8")
