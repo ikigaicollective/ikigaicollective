@@ -25,7 +25,7 @@ npm ci
 npm run dev       # local dev server at http://localhost:4321
 npm run build     # production build to site/dist/
 npm run preview   # serve the build locally
-npm run test:labnight && npm run test:guard && npm run test:mcp
+npm test          # all test scripts (CI runs this and the build on every pull request)
 ```
 
 Please make sure `npm run build` passes before opening a PR.
