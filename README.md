@@ -46,6 +46,19 @@ Each member's journey is itself an experiment, documented and shared (with permi
 - **Website** — [ikigaicollective.org](https://ikigaicollective.org)
 - **MCP server** — [ikigaicollective.org/mcp](site/MCP.md), read-only access to the Lab Notes for AI assistants
 
+## Importing Lab Notes from Substack
+
+New Lab Notes come from the Substack feed. To import them by hand, run the importer locally on a branch off `site-v2` and open a pull request with the result:
+
+```sh
+cd site
+npm ci
+node scripts/import-substack.mjs           # dry run: lists the posts it would import
+node scripts/import-substack.mjs --write   # writes src/content/notes/<slug>.md and src/assets/covers/<slug>.jpg
+```
+
+Commit the new files and open a pull request against `site-v2`. The importer skips any post whose slug or Substack link is already a note, so running it twice adds nothing. Substack blocks GitHub's runners, so this runs from a local machine, not from GitHub Actions.
+
 ## Members
 
 The Collective is a diverse, distributed group united by curiosity and the willingness to experiment. Members span multiple countries, backgrounds, and levels of technical expertise. What they share is the conviction that AI can be leveraged not just to do more, but to live better.
