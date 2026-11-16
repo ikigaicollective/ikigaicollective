@@ -9,6 +9,7 @@ Usage: python3 lab-notes/build.py   (run from the repo root)
 """
 from __future__ import annotations
 
+import html as htmllib
 import re
 import subprocess
 from datetime import date
@@ -140,7 +141,7 @@ def main() -> None:
     posts = sorted((parse(p) for p in SRC.glob("*.md")), key=lambda m: m["date"])
     for m in posts:
         html = PAGE.format(
-            title=m["title"], desc=first_sentence(m["body_md"]), style=STYLE,
+            title=htmllib.escape(m["title"]), desc=htmllib.escape(first_sentence(m["body_md"])), style=STYLE,
             week=m["week"], pretty_date=pretty(m["date"]), body=md_to_html(m["body_md"]),
             slug=m["slug"],
         )
@@ -148,7 +149,7 @@ def main() -> None:
         print("built", m["slug"] + ".html")
     items = "\n".join(
         f'<li><span class="d">{pretty(m["date"])}</span> '
-        f'<a href="/lab-notes/{m["slug"]}.html">{m["title"]}</a></li>'
+        f'<a href="/lab-notes/{m["slug"]}.html">{htmllib.escape(m["title"])}</a></li>'
         for m in reversed(posts)
     )
     (ROOT / "index.html").write_text(INDEX.format(style=STYLE, items=items), encoding="utf-8")
