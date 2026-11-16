@@ -27,7 +27,7 @@ export const facts = (mds) => mds.map((s) => ({
   week: +s.match(/^week: (\d+)/m)?.[1] || 0,
 }));
 
-/** New posts only: skips a post whose link is known, whose slug exists, or whose date is within 2 days of an existing note.
+/** New posts only: skips a post whose link is known or whose slug exists. Every other distinct post is imported.
  * @param {(message: string) => unknown} [log] */
 export function plan(items, existing, log = () => {}) {
   const days = [...existing];
@@ -38,8 +38,6 @@ export function plan(items, existing, log = () => {}) {
     const slug = link.split('/p/')[1];
     if (!slug || days.some((d) => d.canonical === link || d.slug === slug)) continue;
     const when = +new Date(text(it.pubDate));
-    const twin = days.find((d) => Math.abs(d.t - when) <= 2 * 864e5);
-    if (twin) { log(`skip ${slug}: within 2 days of existing note ${twin.slug}`); continue; }
     const body = td.turndown(text(it['content:encoded'])).replace(/\n{3,}/g, '\n\n').replace(/^\s*\[\s*!\[[^\]]*\]\([^)]*\)\s*\]\([^)]*\)\s*/, ''); // leading hero image duplicates the cover
     const date = new Date(when).toISOString().slice(0, 10);
     week += 1; // ponytail: next number in sequence; edit by hand when a post is not a Lab Night note
