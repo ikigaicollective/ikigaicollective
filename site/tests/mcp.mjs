@@ -1,5 +1,7 @@
 // MCP server: run with `node --experimental-strip-types tests/mcp.mjs`. No network: content is served from fixtures.
 import assert from 'node:assert/strict';
+delete process.env.UMAMI_WEBSITE_ID;
+delete process.env.UMAMI_HOST;
 const { handle, resetCache, LIMIT, clientOf } = await import('../api/_lib/mcp.ts');
 
 const pages = [
@@ -116,5 +118,115 @@ assert.equal(last.status, 429, 'over the limit');
 assert.equal((await rpc('tools/list', {}, '10.8.8.8')).status, 200, 'other clients unaffected');
 now += 61_000;
 assert.equal((await rpc('tools/list', {}, '10.9.9.9')).status, 200, 'window resets');
+
+// Running totals: server-side Umami events. Unset website id sends nothing. Payload has no IP or request headers.
+const realFetch = globalThis.fetch;
+const headerMap = (h) => {
+  if (!h) return {};
+  if (typeof h.entries === 'function') return Object.fromEntries([...h.entries()].map(([k, v]) => [k.toLowerCase(), v]));
+  return Object.fromEntries(Object.entries(h).map(([k, v]) => [k.toLowerCase(), v]));
+};
+const WEBSITE = '00000000-0000-4000-8000-000000000001';
+let sent = [];
+const recordFetch = (impl) => {
+  globalThis.fetch = async (url, init = {}) => {
+    sent.push({ url: String(url), headers: headerMap(init.headers), body: init.body ? JSON.parse(init.body) : undefined, signal: init.signal });
+    return impl(url, init);
+  };
+};
+try {
+  recordFetch(async () => new Response('{}', { status: 200 }));
+  const before = sent.length;
+  await call('search', { query: 'values' });
+  assert.equal(sent.length, before, 'UMAMI_WEBSITE_ID unset: no event');
+
+  process.env.UMAMI_WEBSITE_ID = WEBSITE;
+  await rpc('tools/list', {});
+  assert.equal(sent.length, before, 'tools/list is not an event');
+  await rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {} });
+  assert.equal(sent.length, before, 'initialize without clientInfo: no event');
+
+  await rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'cursor', version: '2.0' } }, '10.1.2.3');
+  let t = await call('search', { query: '  values  ' });
+  assert.ok(t.includes('First draft of our values'));
+  t = await call('search', { query: 'xyzzy nothing' });
+  assert.ok(t.startsWith('Nothing on ikigaicollective.org matches'));
+  t = await call('show_page', { page: 'tsundoku' });
+  assert.ok(t.startsWith('Source: https://ikigaicollective.org/lab-notes/tsundoku'));
+  const long = `  ${'a'.repeat(250)}  `;
+  t = await call('show_page', { page: long });
+  assert.ok(t.startsWith('Not found'));
+
+  const events = sent.map((s) => s.body);
+  assert.deepEqual(events.map((e) => e.payload.name), ['mcp_initialize', 'mcp_tool', 'mcp_tool', 'mcp_tool', 'mcp_tool']);
+  assert.deepEqual(events[0].payload.data, { client: 'cursor', version: '2.0' });
+  assert.deepEqual(events[1].payload.data, { tool: 'search', query: 'values', found: true });
+  assert.equal(events[2].payload.data.found, false);
+  assert.equal(events[2].payload.data.query, 'xyzzy nothing');
+  assert.deepEqual(events[3].payload.data, { tool: 'show_page', query: 'tsundoku', found: true });
+  assert.equal(events[4].payload.data.query, 'a'.repeat(200), 'query trimmed to 200 characters');
+  assert.equal(events[4].payload.data.found, false);
+  for (const s of sent) {
+    assert.equal(s.url, 'https://gateway.umami.is/api/send');
+    assert.equal(s.headers['user-agent'], 'ikigai-mcp/1.0');
+    assert.ok(!/bot/i.test(s.headers['user-agent']));
+    assert.deepEqual(Object.keys(s.headers).sort(), ['content-type', 'user-agent']);
+    assert.equal(s.body.type, 'event');
+    assert.deepEqual(Object.keys(s.body).sort(), ['payload', 'type']);
+    assert.deepEqual(Object.keys(s.body.payload).sort(), ['data', 'hostname', 'name', 'url', 'website']);
+    assert.equal(s.body.payload.website, WEBSITE);
+    assert.equal(s.body.payload.hostname, 'ikigaicollective.org');
+    assert.equal(s.body.payload.url, '/mcp');
+    const flat = JSON.stringify(s.body);
+    assert.ok(!flat.includes('10.1.2.3') && !flat.includes('10.0.0.1') && !flat.includes('x-forwarded-for'), 'no IP or header fields');
+    assert.equal('ip' in s.body.payload, false);
+    assert.equal('userAgent' in s.body.payload, false);
+    if ('found' in s.body.payload.data) assert.equal(typeof s.body.payload.data.found, 'boolean');
+  }
+
+  process.env.UMAMI_HOST = 'https://umami.example.test/';
+  sent = [];
+  await call('search', { query: 'values' });
+  assert.equal(sent[0].url, 'https://umami.example.test/api/send');
+  delete process.env.UMAMI_HOST;
+
+  // A failed send does not change the answer.
+  globalThis.fetch = async () => { throw new Error('umami down'); };
+  t = await call('search', { query: 'values' });
+  assert.ok(t.includes('First draft of our values'), 'failed send: answer unchanged');
+  globalThis.fetch = async () => new Response('no', { status: 500 });
+  t = await call('show_page', { page: 'tsundoku' });
+  assert.ok(t.startsWith('Source:'), 'rejected send: answer unchanged');
+
+  // A slow send must not delay the answer. The request aborts at 1500ms.
+  let abortedAt = 0;
+  const started = Date.now();
+  globalThis.fetch = (url, init = {}) => new Promise((resolve, reject) => {
+    const timer = setTimeout(() => resolve(new Response('late')), 10_000);
+    init.signal?.addEventListener('abort', () => { clearTimeout(timer); abortedAt = Date.now() - started; reject(init.signal.reason); });
+  });
+  const slowStart = Date.now();
+  t = await call('show_page', { page: '/' });
+  assert.ok(Date.now() - slowStart < 500, 'slow send does not delay the answer');
+  assert.ok(t.includes('Lab Night every Thursday'));
+  const deadline = Date.now() + 4000;
+  while (!abortedAt && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 50));
+  assert.ok(abortedAt >= 1400 && abortedAt < 4000, 'send aborts at 1500ms');
+
+  // Content down: still an event, found false, and the short answer with a link.
+  resetCache();
+  sent = [];
+  recordFetch(async () => new Response('{}', { status: 200 }));
+  const down = { ...opts, fetch: async () => new Response('', { status: 503 }) };
+  const r = await handle(new Request('http://x.test/mcp', { method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream', 'x-forwarded-for': '10.4.5.6' }, body: JSON.stringify({ jsonrpc: '2.0', id: 501, method: 'tools/call', params: { name: 'search', arguments: { query: 'values' } } }) }), down);
+  assert.ok((await r.json()).result.content[0].text.includes('https://ikigaicollective.org/lab-notes'));
+  assert.equal(sent.length, 1);
+  assert.deepEqual(sent[0].body.payload.data, { tool: 'search', query: 'values', found: false });
+  assert.ok(!JSON.stringify(sent[0].body).includes('10.4.5.6'));
+} finally {
+  delete process.env.UMAMI_WEBSITE_ID;
+  delete process.env.UMAMI_HOST;
+  globalThis.fetch = realFetch;
+}
 
 console.log('mcp: all checks passed');
