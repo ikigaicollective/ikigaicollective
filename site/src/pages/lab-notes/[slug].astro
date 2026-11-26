@@ -5,6 +5,7 @@ import Base from '../../layouts/Base.astro';
 import Button from '../../components/Button.astro';
 import { getNotes, gradient } from '../../lib/notes';
 import { ORIGIN } from '../../lib/seo';
+import { LAB_NIGHT_LABEL } from '../../lib/labnight';
 
 export async function getStaticPaths() {
   const notes = await getNotes();
@@ -37,7 +38,7 @@ const last = words.pop();
         <div class="flex flex-wrap items-center gap-x-12 gap-y-7 bg-bg p-8 text-fg shadow-[0_30px_80px_rgba(10,10,10,0.35)] md:p-12">
           <div class="flex flex-[1_1_460px] flex-col gap-3">
             <h2 id="cta" class="font-display text-[clamp(30px,3.6vw,40px)] font-normal leading-[1.1]">This happened on a Thursday.<br /><span class="italic text-copper">The next one is yours.</span></h2>
-            <p class="text-[17px] leading-[1.55]">Lab Night · <span data-ln-date>Thursday</span> · 21:00 Rome<span data-ln-local="sep"></span></p>
+            <p class="text-[17px] leading-[1.55]">Lab Night · <span data-ln-date>Thursday</span> · {LAB_NIGHT_LABEL}<span data-ln-local="sep"></span></p>
           </div>
           <div class="flex flex-col gap-3">
             <Button href="/lab-night" variant="ink" class="text-center">Get the invite</Button>

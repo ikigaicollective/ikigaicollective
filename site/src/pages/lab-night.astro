@@ -22,8 +22,9 @@ const hour = [
   ['THE CLOSE', 'A question for next week', 'Everyone leaves with a challenge to think about. The night becomes a Lab Note.'],
 ];
 import { eventLd } from '../lib/seo';
+import { LAB_NIGHT_LABEL } from '../lib/labnight';
 ---
-<Base jsonld={eventLd} title="Lab Night" description="Every Thursday, one hour, 21:00 Rome time. Members show the week's work, think out loud together and leave with a question." overlayNav>
+<Base jsonld={eventLd} title="Lab Night" description={`Every Thursday, one hour, ${LAB_NIGHT_LABEL} time. Members show the week's work, think out loud together and leave with a question.`} overlayNav>
   <section aria-labelledby="h1" class="relative overflow-hidden pt-[150px]">
     <div aria-hidden="true" class="absolute inset-0" style="background: radial-gradient(ellipse 70% 55% at 80% 110%, var(--copper-500) 0%, var(--copper-300) 18%, var(--copper-100) 40%, transparent 66%)"></div>
     <div class="wrap relative flex flex-wrap items-end gap-14 pb-[140px] pt-[100px] max-md:pb-20 max-md:pt-16">
@@ -46,7 +47,7 @@ import { eventLd } from '../lib/seo';
           <span class="flex items-center gap-2.5 font-display text-[30px]"><span class="pill-dot size-2.5 rounded-full bg-copper shadow-[0_0_10px_var(--accent)]" aria-hidden="true"></span>Lab Night is live now</span>
           {SITE.meetUrl && <Button href={SITE.meetUrl} external>Join now</Button>}
         </div>
-        <span class="border-t border-line pt-3.5 text-[16px]">21:00 Rome<span data-ln-local="sep" class="text-cu-800"></span> · Google Meet</span>
+        <span class="border-t border-line pt-3.5 text-[16px]">{LAB_NIGHT_LABEL}<span data-ln-local="sep" class="text-cu-800"></span> · Google Meet</span>
       </div>
     </div>
   </section>

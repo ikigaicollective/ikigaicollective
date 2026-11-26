@@ -3,7 +3,7 @@
 // handling live in scripts/forms.ts (data-invite-form); the next date comes from lib/labnight.
 import Agent from './footer/FooterAgent.astro';
 import copy from '../content/site/copy.json';
-import { nextLabNight, tileParts } from '../lib/labnight';
+import { nextLabNight, tileParts, LAB_NIGHT_LABEL } from '../lib/labnight';
 interface Props { name?: boolean; intro?: string; foot?: string; success: string; id?: string }
 const { name = false, intro, foot = 'Protected by an invisible spam check.', success, id = 'invite-form' } = Astro.props;
 const tile = tileParts(nextLabNight());
@@ -16,7 +16,7 @@ const agent = ['M-23 -26 Q-31 -14 -27 -4'];
     <div class="tk-tile" aria-hidden="true"><span class="tk-tw" data-ln-wd>{tile.wd}</span><span class="tk-day" data-ln-day>{tile.day}</span><span class="tk-mon" data-ln-mon>{tile.mon}</span></div>
     <div class="tk-ev">
       <h3 id={`${id}-h`} class="tk-title">Lab Night · Ikigai Collective</h3>
-      <p class="tk-line">21:00 Rome<span data-ln-local="tk" class="tk-local"></span> · Google Meet · every Thursday</p>
+      <p class="tk-line">{LAB_NIGHT_LABEL}<span data-ln-local="tk" class="tk-local"></span> · Google Meet · every Thursday</p>
     </div>
     <span class="tk-weekly">WEEKLY</span>
     <span class="tk-stamp" aria-hidden="true">{t.stamp}</span>

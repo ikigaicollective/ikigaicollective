@@ -1,5 +1,6 @@
 import { getNotes } from '../lib/notes';
 import { ORIGIN, PAGES } from '../lib/seo';
+import { LAB_NIGHT_LABEL } from '../lib/labnight';
 
 // llms.txt: a plain-text map for agents. Every page also exists as markdown at <url>.md (home: /index.md).
 export async function GET() {
@@ -7,7 +8,7 @@ export async function GET() {
   const md = (p: string) => `${ORIGIN}${p === '/' ? '/index' : p}.md`;
   const text = `# Ikigai Collective
 
-> A studio for people using AI to design their lives. We meet every Thursday at 21:00 Rome time for Lab Night, publish what we try in open Lab Notes, and keep three values as the only membership requirement: curiosity, agency and compassion. Free to join.
+> A studio for people using AI to design their lives. We meet every Thursday at ${LAB_NIGHT_LABEL} time for Lab Night, publish what we try in open Lab Notes, and keep three values as the only membership requirement: curiosity, agency and compassion. Free to join.
 
 Members are not named in Lab Notes. Content is CC BY-SA 4.0, code is MIT.
 

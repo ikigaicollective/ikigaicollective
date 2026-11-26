@@ -1,6 +1,7 @@
 ---
 import Mark from './Mark.astro';
 import { NAV_LINKS, SITE } from '../config';
+import { LAB_NIGHT_LABEL } from '../lib/labnight';
 
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 const isHome = path === '/';
@@ -41,8 +42,8 @@ const active = (href: string) => path === href || path.startsWith(href + '/');
       <div id="nav-pill" class="flex max-w-full items-center gap-3 rounded-[22px] border border-cu-200 bg-card/75 pl-[18px] pr-1.5 text-[14px]">
         <a href="/lab-night" class="hit flex items-center gap-3 py-2.5 no-underline text-fg hover:text-cu-900">
           <span class="pill-dot size-2 shrink-0 rounded-full bg-copper shadow-[0_0_10px_var(--accent)]" aria-hidden="true"></span>
-          <span data-ln-show="idle">Next Lab Night · <span data-ln-date>Thursday</span> · 21:00 Rome<span data-ln-local="sep" class="text-cu-700"></span></span>
-          <span data-ln-show="tonight" hidden>Lab Night tonight · starts in <span data-ln-timer class="tabular-nums">--:--:--</span> · 21:00 Rome<span data-ln-local="sep" class="text-cu-700"></span></span>
+          <span data-ln-show="idle">Next Lab Night · <span data-ln-date>Thursday</span> · {LAB_NIGHT_LABEL}<span data-ln-local="sep" class="text-cu-700"></span></span>
+          <span data-ln-show="tonight" hidden>Lab Night tonight · starts in <span data-ln-timer class="tabular-nums">--:--:--</span> · {LAB_NIGHT_LABEL}<span data-ln-local="sep" class="text-cu-700"></span></span>
           <span data-ln-show="live" hidden>Lab Night is live now</span>
         </a>
         {SITE.meetUrl && <a href={SITE.meetUrl} target="_blank" rel="noopener" data-ln-show="live" hidden class="btn btn-primary btn-sm !min-h-11 !px-4">Join now</a>}

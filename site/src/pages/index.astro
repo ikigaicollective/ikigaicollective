@@ -14,7 +14,10 @@ import { getNotes, words } from '../lib/notes';
 import { homeLd } from '../lib/seo';
 import SpiralArchive from '../components/SpiralArchive.astro';
 import stats from '../content/site/stats.json';
-import faq from '../content/site/faq.json';
+import faqRaw from '../content/site/faq.json';
+import { LAB_NIGHT_LABEL } from '../lib/labnight';
+// faq.json writes the time as {labNight} so the schedule lives only in lib/labnight.
+const faq = faqRaw.map((f) => ({ ...f, a: f.a.replace('{labNight}', LAB_NIGHT_LABEL) }));
 import copy from '../content/site/copy.json';
 
 const question = (await getEntry('site', 'question'))!.data;

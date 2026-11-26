@@ -4,7 +4,7 @@ import AgentMini from './AgentMini.astro';
 import FooterScene from './footer/FooterScene.astro';
 import { SITE } from '../config';
 import copy from '../content/site/copy.json';
-import { nextLabNight, pillText } from '../lib/labnight';
+import { nextLabNight, pillText, LAB_NIGHT_LABEL } from '../lib/labnight';
 
 const f = copy.footer, credit = copy.footerCredit;
 const site = [['/how-it-works', 'How it works'], ['/lab-night', 'Lab Night'], ['/lab-notes', 'Lab Notes'], ['/horizon', 'Horizon'], ['/partners', 'Partners'], ['/join', 'Join']];
@@ -51,7 +51,7 @@ const label = 'mb-2 text-[12px] tracking-[0.28em] text-copper';
       <div class="flex flex-col"><span>{f.copyright}</span><span class="text-muted">{f.licence}</span></div>
       <div class="flex flex-col">
         <span>{f.nextLabel}</span>
-        <span class="font-mono text-[13px] text-muted" data-ln-show="idle tonight"><span data-ln-date>{next}</span> · 21:00 Rome</span>
+        <span class="font-mono text-[13px] text-muted" data-ln-show="idle tonight"><span data-ln-date>{next}</span> · {LAB_NIGHT_LABEL}</span>
         <span class="font-mono text-muted" data-ln-show="live" hidden>{f.live}</span>
       </div>
       <div class="flex flex-col">
